@@ -4,11 +4,6 @@
   "installCommand": "bun install",
   "buildCommand": "bun run build",
   "outputDirectory": "dist/client",
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs22.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/(.*)",
