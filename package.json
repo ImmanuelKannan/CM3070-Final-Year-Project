@@ -16,7 +16,6 @@
     "check": "biome check",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "deploy": "bun run build && wrangler deploy",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
