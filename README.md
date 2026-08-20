@@ -5,8 +5,8 @@ Welcome to your new TanStack Start app!
 To run this application:
 
 ```bash
-npm install
-npm run dev
+bun install --frozen-lockfile
+bun run dev
 ```
 
 # Building For Production
@@ -14,7 +14,7 @@ npm run dev
 To build this application for production:
 
 ```bash
-npm run build
+bun run build
 ```
 
 ## Styling
@@ -36,9 +36,9 @@ This project uses [Biome](https://biomejs.dev/) for linting and formatting. The 
 
 
 ```bash
-npm run lint
-npm run format
-npm run check
+bun run lint
+bun run format
+bun run check
 ```
 
 
@@ -46,9 +46,9 @@ npm run check
 
 This project uses the Cloudflare Vite plugin (configured in `vite.config.ts`) and `wrangler.jsonc`:
 
-1. Install Wrangler: `npm install -g wrangler`
+1. Install Wrangler: `bun add --global wrangler`
 2. Authenticate: `wrangler login`
-3. Deploy: `npx wrangler deploy`
+3. Deploy: `bunx wrangler deploy`
 
 For production env vars, run `wrangler secret put MY_VAR` for each secret listed in `.env.example`. Public (non-secret) vars go in `wrangler.jsonc` under `vars`.
 
@@ -60,7 +60,7 @@ KV, D1, R2, and Durable Object bindings are configured in `wrangler.jsonc` — s
 Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
 
 ```bash
-pnpm dlx shadcn@latest add button
+bunx shadcn@latest add button
 ```
 
 
@@ -69,7 +69,7 @@ pnpm dlx shadcn@latest add button
 1. Generate and set the `BETTER_AUTH_SECRET` environment variable in your `.env.local`:
 
    ```bash
-   npx -y @better-auth/cli secret
+   bunx @better-auth/cli secret
    ```
 
 2. Visit the [Better Auth documentation](https://www.better-auth.com) to unlock the full potential of authentication in your app.
@@ -94,7 +94,7 @@ export const auth = betterAuth({
 Then run migrations:
 
 ```bash
-npx -y @better-auth/cli migrate
+bunx @better-auth/cli migrate
 ```
 
 
