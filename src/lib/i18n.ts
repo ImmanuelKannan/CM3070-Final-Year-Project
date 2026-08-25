@@ -66,6 +66,22 @@ export const messages = {
 		title: "HeyMe dashboard",
 		lede: "This is your HeyMe dashboard",
 		body: "Manage your identity here",
+		identity: {
+			lede: "Update the details apps will see when they ask HeyMe who you are.",
+			personalHeading: "Personal details",
+			contactHeading: "Contact details",
+			firstNameLabel: "First name",
+			lastNameLabel: "Last name",
+			emailLabel: "Contact email",
+			emailHint:
+				"Apps you connect reach you at this address. It stays separate from the email you sign in with.",
+			save: "Save changes",
+			saving: "Saving…",
+			saved: "Your identity is up to date.",
+			errorHeading: "We couldn't save your identity",
+			errorBody:
+				"Check your details and try again. If the problem keeps happening, reload the page.",
+		},
 	},
 	footer: {
 		copyright: "© HeyMe",
