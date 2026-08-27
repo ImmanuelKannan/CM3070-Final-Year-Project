@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
 	index,
 	pgTable,
@@ -30,5 +31,55 @@ export const identityAttributes = pgTable(
 	(table) => [
 		uniqueIndex("identity_attributes_user_key_idx").on(table.userId, table.key),
 		index("identity_attributes_user_id_idx").on(table.userId),
+	],
+);
+
+export const contextualProfiles = pgTable(
+	"contextual_profiles",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		name: text("name").notNull(),
+		description: text("description").notNull().default(""),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+		updatedAt: timestamp("updated_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => [
+		uniqueIndex("contextual_profiles_user_name_lower_idx").on(
+			table.userId,
+			sql`lower(${table.name})`,
+		),
+		index("contextual_profiles_user_id_idx").on(table.userId),
+	],
+);
+
+export const profileAttributeOverrides = pgTable(
+	"profile_attribute_overrides",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		profileId: uuid("profile_id")
+			.notNull()
+			.references(() => contextualProfiles.id, { onDelete: "cascade" }),
+		key: text("key").notNull(),
+		value: text("value").notNull().default(""),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+		updatedAt: timestamp("updated_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => [
+		uniqueIndex("profile_attribute_overrides_profile_key_idx").on(
+			table.profileId,
+			table.key,
+		),
+		index("profile_attribute_overrides_profile_id_idx").on(table.profileId),
 	],
 );

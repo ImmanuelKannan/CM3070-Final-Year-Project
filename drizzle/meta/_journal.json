@@ -15,6 +15,13 @@
       "when": 1787590767372,
       "tag": "0001_unique_blob",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787637226885,
+      "tag": "0002_youthful_changeling",
+      "breakpoints": true
     }
   ]
 }
