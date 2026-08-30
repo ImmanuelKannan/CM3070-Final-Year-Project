@@ -1,28 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeaders } from "@tanstack/react-start/server";
 import { APIError } from "better-auth/api";
 
-import { auth } from "#/lib/auth";
+import { getUserIdFromRequest } from "#/lib/auth.functions";
 import {
 	getBaseIdentity,
 	normalizeIdentityAttributes,
+	normalizeUpdateIdentityAttributeInput,
 	updateBaseIdentity,
+	validateBaseAttribute,
 } from "#/lib/identity";
-
-async function requireUserId(): Promise<string> {
-	const headers = getRequestHeaders();
-	const session = await auth.api.getSession({ headers });
-	if (!session) {
-		throw new APIError("UNAUTHORIZED", {
-			message: "Sign in to manage your identity",
-		});
-	}
-	return session.user.id;
-}
 
 export const getIdentity = createServerFn({ method: "GET" }).handler(
 	async () => {
-		const userId = await requireUserId();
+		const userId = await getUserIdFromRequest("Sign in to manage your identity");
 		return getBaseIdentity(userId);
 	},
 );
@@ -30,7 +20,20 @@ export const getIdentity = createServerFn({ method: "GET" }).handler(
 export const updateIdentity = createServerFn({ method: "POST" })
 	.validator(normalizeIdentityAttributes)
 	.handler(async ({ data }) => {
-		const userId = await requireUserId();
+		const userId = await getUserIdFromRequest("Sign in to manage your identity");
 		const identity = await updateBaseIdentity(userId, data);
 		return { success: true, identity };
+	});
+
+export const updateIdentityAttribute = createServerFn({ method: "POST" })
+	.validator(normalizeUpdateIdentityAttributeInput)
+	.handler(async ({ data }) => {
+		const userId = await getUserIdFromRequest("Sign in to manage your identity");
+		const { key, value } = data;
+		const validationError = validateBaseAttribute(key, value);
+		if (validationError) {
+			throw new APIError("BAD_REQUEST", { message: validationError });
+		}
+		const identity = await updateBaseIdentity(userId, { [key]: value });
+		return { success: true, key, value, identity };
 	});

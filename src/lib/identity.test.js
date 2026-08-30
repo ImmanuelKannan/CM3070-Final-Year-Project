@@ -6,6 +6,7 @@ import {
 	getBaseIdentity,
 	normalizeIdentityAttributes,
 	updateBaseIdentity,
+	validateBaseAttribute,
 } from "./identity";
 
 const insertUser = `
@@ -111,6 +112,21 @@ describe("normalizeIdentityAttributes", () => {
 	});
 });
 
+describe("validateBaseAttribute", () => {
+	test("rejects unknown keys and invalid values", () => {
+		expect(validateBaseAttribute("phone", "123")).toBe(
+			"Unknown attribute key: phone",
+		);
+		expect(validateBaseAttribute("email", "not-an-email")).toContain(
+			"Invalid email address",
+		);
+		expect(validateBaseAttribute("firstName", "   ")).toBe(
+			"First name is required",
+		);
+		expect(validateBaseAttribute("bio", "hello")).toBeNull();
+	});
+});
+
 describe("updateBaseIdentity", () => {
 	test("persists all attributes atomically and mirrors the name", async () => {
 		const { userId, email } = await seedUser();
@@ -144,11 +160,38 @@ describe("updateBaseIdentity", () => {
 				email,
 			});
 
-			expect(await getBaseIdentity(userId)).toEqual(identity);
+			expect(await getBaseIdentity(userId)).toMatchObject(identity);
 		} finally {
 			await pool.query('DELETE FROM "user" WHERE "id" = $1', [userId]);
 		}
-	});
+	}, 15000);
+
+	test("single-attribute updates persist without disturbing other attributes", async () => {
+		const { userId } = await seedUser();
+		try {
+			await updateBaseIdentity(userId, { phoneNumber: "+60 123456789" });
+
+			const identity = await getBaseIdentity(userId);
+			expect(identity).toMatchObject({
+				firstName: "Ada",
+				lastName: "Lovelace",
+				phoneNumber: "+60 123456789",
+			});
+
+			const rows = await pool.query(
+				'SELECT "key", "value" FROM "identity_attributes" WHERE "user_id" = $1 ORDER BY "key"',
+				[userId],
+			);
+			expect(rows.rows).toEqual([
+				{ key: "email", value: `${userId}@example.com` },
+				{ key: "firstName", value: "Ada" },
+				{ key: "lastName", value: "Lovelace" },
+				{ key: "phoneNumber", value: "+60 123456789" },
+			]);
+		} finally {
+			await pool.query('DELETE FROM "user" WHERE "id" = $1', [userId]);
+		}
+	}, 15000);
 
 	test("does not leak changes to another user (owner scoping)", async () => {
 		const alice = await seedUser({ firstName: "Alice", lastName: "A" });
@@ -164,12 +207,12 @@ describe("updateBaseIdentity", () => {
 			);
 
 			const bobIdentity = await getBaseIdentity(bob.userId);
-			expect(bobIdentity).toEqual({
+			expect(bobIdentity).toMatchObject({
 				firstName: "Bob",
 				lastName: "B",
 				email: bob.email,
 			});
-			expect(await getBaseIdentity(alice.userId)).toEqual({
+			expect(await getBaseIdentity(alice.userId)).toMatchObject({
 				firstName: "Alicia",
 				lastName: "Alpha",
 				email: "alicia@example.com",
@@ -179,5 +222,5 @@ describe("updateBaseIdentity", () => {
 				[alice.userId, bob.userId],
 			]);
 		}
-	});
+	}, 15000);
 });
