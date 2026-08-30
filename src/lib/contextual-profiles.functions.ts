@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { getUserIdFromRequest } from "#/lib/auth.functions";
+import { getUserIdFromRequest } from "#/lib/auth.server";
 import {
 	createProfile,
 	deleteProfile,

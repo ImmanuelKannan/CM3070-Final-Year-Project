@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { APIError } from "better-auth/api";
 
-import { getUserIdFromRequest } from "#/lib/auth.functions";
+import { getUserIdFromRequest } from "#/lib/auth.server";
 import {
 	getBaseIdentity,
 	normalizeIdentityAttributes,
