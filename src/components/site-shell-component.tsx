@@ -33,21 +33,7 @@ export function SiteHeader() {
 						{messages.brand.name}
 					</span>
 				</Link>
-				<div className="flex flex-wrap items-center gap-3">
-					<nav
-						aria-label={messages.nav.label}
-						className="flex items-center gap-1"
-					>
-						<Link
-							to="/"
-							className="inline-block rounded-lg px-3.5 py-2 font-semibold text-sea-ink-soft no-underline hover:bg-lagoon/10 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring aria-[current=page]:bg-lagoon/20 aria-[current=page]:text-sea-ink"
-							activeOptions={{ exact: true }}
-						>
-							{messages.nav.home}
-						</Link>
-					</nav>
-					<HeaderAuthControls />
-				</div>
+				<HeaderAuthControls />
 			</div>
 		</header>
 	);

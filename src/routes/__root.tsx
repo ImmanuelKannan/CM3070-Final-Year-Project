@@ -1,5 +1,10 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import {
+	createRootRoute,
+	HeadContent,
+	Scripts,
+	useRouterState,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import {
@@ -31,25 +36,42 @@ export const Route = createRootRoute({
 	shellComponent: RootDocument,
 });
 
+function useIsAuthenticatedShell(): boolean {
+	return useRouterState({
+		select: (state) =>
+			state.matches.some((match) =>
+				match.routeId.startsWith("/_authenticated"),
+			),
+	});
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
+	const isAuthenticated = useIsAuthenticatedShell();
+
 	return (
 		<html lang={locale} className="min-h-full">
 			<head>
 				<HeadContent />
 			</head>
 			<body className="min-h-full bg-bg-base font-sans text-sea-ink antialiased">
-				<SkipLink />
-				<div className="flex min-h-dvh flex-col">
-					<SiteHeader />
-					<main
-						id="main-content"
-						className="flex-1 py-8 focus-visible:outline-none sm:py-12 lg:py-16"
-						tabIndex={-1}
-					>
-						{children}
-					</main>
-					<SiteFooter />
-				</div>
+				{isAuthenticated ? (
+					children
+				) : (
+					<>
+						<SkipLink />
+						<div className="flex min-h-dvh flex-col">
+							<SiteHeader />
+							<main
+								id="main-content"
+								className="flex-1 py-8 focus-visible:outline-none sm:py-12 lg:py-16"
+								tabIndex={-1}
+							>
+								{children}
+							</main>
+							<SiteFooter />
+						</div>
+					</>
+				)}
 				<TanStackDevtools
 					config={{ position: "bottom-right" }}
 					plugins={[
