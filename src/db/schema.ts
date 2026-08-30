@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+	check,
 	index,
 	pgTable,
 	text,
@@ -41,6 +42,7 @@ export const contextualProfiles = pgTable(
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
+		type: text("type").notNull(),
 		name: text("name").notNull(),
 		description: text("description").notNull().default(""),
 		createdAt: timestamp("created_at", { withTimezone: true })
@@ -51,16 +53,20 @@ export const contextualProfiles = pgTable(
 			.defaultNow(),
 	},
 	(table) => [
-		uniqueIndex("contextual_profiles_user_name_lower_idx").on(
+		uniqueIndex("contextual_profiles_user_type_idx").on(
 			table.userId,
-			sql`lower(${table.name})`,
+			table.type,
+		),
+		check(
+			"contextual_profiles_type_check",
+			sql`${table.type} in ('social', 'banking', 'school', 'others')`,
 		),
 		index("contextual_profiles_user_id_idx").on(table.userId),
 	],
 );
 
-export const profileAttributeOverrides = pgTable(
-	"profile_attribute_overrides",
+export const profileAttributes = pgTable(
+	"profile_attributes",
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
 		profileId: uuid("profile_id")
@@ -76,10 +82,10 @@ export const profileAttributeOverrides = pgTable(
 			.defaultNow(),
 	},
 	(table) => [
-		uniqueIndex("profile_attribute_overrides_profile_key_idx").on(
+		uniqueIndex("profile_attributes_profile_key_idx").on(
 			table.profileId,
 			table.key,
 		),
-		index("profile_attribute_overrides_profile_id_idx").on(table.profileId),
+		index("profile_attributes_profile_id_idx").on(table.profileId),
 	],
 );
