@@ -114,7 +114,7 @@ export function AddProfileModal({ open, onClose, onSubmit }: Props) {
 		<dialog
 			ref={dialogRef}
 			aria-labelledby={titleId}
-			className="w-full max-w-md rounded-2xl border border-line bg-bg-surface p-0 text-sea-ink shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+			className="m-auto w-full max-w-md rounded-2xl border border-line bg-bg-surface p-0 text-sea-ink shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"
 			onClick={(event) => {
 				if (event.target === event.currentTarget) onClose();
 			}}
