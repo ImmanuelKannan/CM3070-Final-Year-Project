@@ -18,14 +18,11 @@ type IdentityForm = {
 	email: string;
 };
 
-// Whole-form schema for the existing identity form: first/last name and the
-// contact email are required. The rest of the catalogue is edited per-attribute
-// via updateIdentityAttribute.
 const identityFormSchema = z.strictObject({
 	firstName: registrationNameSchema("First name"),
 	lastName: registrationNameSchema("Last name"),
 	email: z
-		.email({ error: "Email is required" })
+		.string({ error: "Email is required" })
 		.trim()
 		.toLowerCase()
 		.min(1, "Email is required")
@@ -33,6 +30,7 @@ const identityFormSchema = z.strictObject({
 			IDENTITY_EMAIL_MAX_LENGTH,
 			`Email must be ${IDENTITY_EMAIL_MAX_LENGTH} characters or fewer`,
 		)
+		.email("Email is invalid"),
 });
 
 const updateIdentityAttributeSchema = z.strictObject({
