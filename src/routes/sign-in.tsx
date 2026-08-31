@@ -1,4 +1,8 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	redirect,
+	useRouterState,
+} from "@tanstack/react-router";
 import { useId, useState } from "react";
 import { Input } from "#/components/ui/input";
 import { getSession } from "#/lib/auth.functions";
@@ -21,6 +25,9 @@ function SignIn() {
 	const emailId = useId();
 	const passwordId = useId();
 	const errorId = useId();
+	const queryString = useRouterState({
+		select: (state) => state.location.searchStr,
+	});
 
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -29,7 +36,7 @@ function SignIn() {
 		setError(null);
 
 		try {
-			const { error: signInError } = await authClient.signIn.email({
+			const { data, error: signInError } = await authClient.signIn.email({
 				email: email.trim(),
 				password,
 			});
@@ -38,6 +45,8 @@ function SignIn() {
 				setError(messages.auth.signIn.errorBody);
 				return;
 			}
+
+			if (data?.redirect && data?.url) return;
 
 			window.location.assign("/dashboard");
 		} catch {
@@ -122,12 +131,12 @@ function SignIn() {
 
 				<p className="text-center text-sm text-sea-ink-soft">
 					{messages.auth.signIn.noAccount}{" "}
-					<Link
-						to="/sign-up"
+					<a
+						href={`/sign-up${queryString}`}
 						className="font-semibold text-sea-ink underline decoration-line underline-offset-4 hover:text-lagoon-deep focus-visible:rounded-sm focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 					>
 						{messages.auth.signIn.createAccount}
-					</Link>
+					</a>
 				</p>
 			</form>
 		</div>
