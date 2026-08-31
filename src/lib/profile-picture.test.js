@@ -137,7 +137,7 @@ describe("validateProfilePicture", () => {
 			type: "image/jpeg",
 		});
 		await expect(validateProfilePicture(disguised)).rejects.toThrow(
-			"does not match its declared image type",
+			"File content isn't valid",
 		);
 	});
 });
