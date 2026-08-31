@@ -17,9 +17,12 @@ export interface ProfilePictureStorage {
 }
 
 /**
-  * Get magic byte reference for different formats from https://en.wikipedia.org/wiki/List_of_file_signatures
-  */
-function isAllowedMagicByteSequence(mime: ProfilePictureMime, bytes: Uint8Array): boolean {
+ * Get magic byte reference for different formats from https://en.wikipedia.org/wiki/List_of_file_signatures
+ */
+function isAllowedMagicByteSequence(
+	mime: ProfilePictureMime,
+	bytes: Uint8Array,
+): boolean {
 	switch (mime) {
 		case "image/jpeg":
 			return (
@@ -76,7 +79,7 @@ export async function validateProfilePicture(input: unknown): Promise<{
 
 /**
  * Object names are scoped to a sha256 of the user id plus a random UUID for security
-* */
+ * */
 export function profilePictureUserPrefix(userId: string): string {
 	const namespace = createHash("sha256").update(userId).digest("hex");
 	return `${PROFILE_PICTURES_PREFIX}${namespace}/`;

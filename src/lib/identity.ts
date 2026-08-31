@@ -98,7 +98,7 @@ export async function updateBaseIdentity(
 				});
 		}
 
-    // This is to keep Better Auth identity and user identity data in sync
+		// This is to keep Better Auth identity and user identity data in sync
 		const mirrorRows = await tx
 			.select({ key: identityAttributes.key, value: identityAttributes.value })
 			.from(identityAttributes)

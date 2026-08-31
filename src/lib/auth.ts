@@ -1,5 +1,7 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { oauthProvider } from "@better-auth/oauth-provider";
 import { betterAuth } from "better-auth";
+import { jwt } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
 import { db } from "#/db";
@@ -43,5 +45,25 @@ export const auth = betterAuth({
 			},
 		},
 	},
-	plugins: [tanstackStartCookies()],
+	plugins: [
+		jwt({
+			jwks: {
+				disablePrivateKeyEncryption: process.env.NODE_ENV === "development",
+			},
+			jwt: {
+				issuer: process.env.BETTER_AUTH_URL,
+			},
+		}),
+		oauthProvider({
+			loginPage: "/oauth/login",
+			consentPage: "/oauth/consent",
+			scopes: ["openid", "profile", "email", "offline_access"],
+			allowDynamicClientRegistration: false,
+			silenceWarnings: {
+				oauthAuthServerConfig: true,
+				openidConfig: true,
+			},
+		}),
+		tanstackStartCookies(),
+	],
 });
