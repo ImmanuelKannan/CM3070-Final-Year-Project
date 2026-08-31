@@ -5,6 +5,7 @@ import { AddProfileModal } from "#/features/profiles/AddProfileModal";
 import { ContextProfileAttributesModal } from "#/features/profiles/ContextProfileAttributesModal";
 import { ContextProfilesSection } from "#/features/profiles/ContextProfilesSection";
 import { IdentityDataTabs } from "#/features/profiles/IdentityDataTabs";
+import { ProfilePicturePicker } from "#/features/profiles/ProfilePicturePicker";
 import { ProfileSummaryCard } from "#/features/profiles/ProfileSummaryCard";
 import { authClient } from "#/lib/auth-client";
 import type { ProfileView } from "#/lib/contextual-profiles";
@@ -50,7 +51,8 @@ function Profiles() {
 	const { identity: initialIdentity, profiles: initialProfiles } =
 		Route.useLoaderData();
 	const { session } = Route.useRouteContext();
-	const { data: clientSession } = authClient.useSession();
+	const { data: clientSession, refetch: refetchSession } =
+		authClient.useSession();
 
 	const [identity, setIdentity] =
 		useState<Record<string, string>>(initialIdentity);
@@ -89,12 +91,18 @@ function Profiles() {
 			const result = await updateIdentityAttribute({ data: { key, value } });
 			setIdentity(result.identity);
 			if (key === "firstName" || key === "lastName") {
-				void authClient
-					.getSession({ fetchOptions: { cache: "no-store" } })
-					.catch(() => undefined);
+				void refetchSession().catch(() => undefined);
 			}
 		},
-		[],
+		[refetchSession],
+	);
+
+	const handleProfilePictureUploaded = useCallback(
+		(url: string) => {
+			setIdentity((prev) => ({ ...prev, profilePicture: url }));
+			void refetchSession().catch(() => undefined);
+		},
+		[refetchSession],
 	);
 
 	const handleCreateProfile = useCallback(
@@ -124,7 +132,9 @@ function Profiles() {
 				const full = await getProfileServerFn({ data: profile.id });
 				setEditingProfile(full);
 			} catch (err) {
-				setMetadataError(setErrorMessage(err, messages.profiles.modalErrorBody));
+				setMetadataError(
+					setErrorMessage(err, messages.profiles.modalErrorBody),
+				);
 			} finally {
 				setEditingLoading(false);
 			}
@@ -150,7 +160,9 @@ function Profiles() {
 				setEditingProfile(updated);
 				await refreshProfiles();
 			} catch (err) {
-				setMetadataError(setErrorMessage(err, messages.profiles.modalErrorBody));
+				setMetadataError(
+					setErrorMessage(err, messages.profiles.modalErrorBody),
+				);
 				throw err;
 			} finally {
 				setMetadataPending(false);
@@ -205,7 +217,7 @@ function Profiles() {
 			<ProfileSummaryCard
 				name={displayName}
 				email={sessionUser?.email ?? ""}
-				image={sessionUser?.image ?? null}
+				image={identity.profilePicture || sessionUser?.image || null}
 			/>
 
 			<section
@@ -227,6 +239,12 @@ function Profiles() {
 					attributes={identity}
 					onAttributeChange={handleIdentityAttributeChange}
 					onSaveAttribute={handleIdentityAttributeSave}
+					identityExtras={
+						<ProfilePicturePicker
+							currentUrl={identity.profilePicture ?? ""}
+							onUploaded={handleProfilePictureUploaded}
+						/>
+					}
 				/>
 			</section>
 

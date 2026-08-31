@@ -25,7 +25,7 @@ const identityFormSchema = z.strictObject({
 	firstName: registrationNameSchema("First name"),
 	lastName: registrationNameSchema("Last name"),
 	email: z
-		.string({ error: "Email is required" })
+		.email({ error: "Email is required" })
 		.trim()
 		.toLowerCase()
 		.min(1, "Email is required")
@@ -33,7 +33,6 @@ const identityFormSchema = z.strictObject({
 			IDENTITY_EMAIL_MAX_LENGTH,
 			`Email must be ${IDENTITY_EMAIL_MAX_LENGTH} characters or fewer`,
 		)
-		.email("Email is invalid"),
 });
 
 const updateIdentityAttributeSchema = z.strictObject({
@@ -101,27 +100,40 @@ export async function updateBaseIdentity(
 				});
 		}
 
-		// Mirror the canonical names (stored in identity_attributes) onto the
-		// Better Auth user row, so single-attribute updates keep it in sync too.
-		const nameRows = await tx
+    // This is to keep Better Auth identity and user identity data in sync
+		const mirrorRows = await tx
 			.select({ key: identityAttributes.key, value: identityAttributes.value })
 			.from(identityAttributes)
 			.where(
 				and(
 					eq(identityAttributes.userId, userId),
-					inArray(identityAttributes.key, ["firstName", "lastName"]),
+					inArray(identityAttributes.key, [
+						"firstName",
+						"lastName",
+						"profilePicture",
+					]),
 				),
 			);
-		const names = Object.fromEntries(nameRows.map((r) => [r.key, r.value]));
-		if (names.firstName && names.lastName) {
-			await tx
-				.update(user)
-				.set({
-					firstName: names.firstName,
-					lastName: names.lastName,
-					name: `${names.firstName} ${names.lastName}`,
-				})
-				.where(eq(user.id, userId));
+		const mirrored = Object.fromEntries(
+			mirrorRows.map((r) => [r.key, r.value]),
+		);
+
+		const userUpdate: {
+			firstName?: string;
+			lastName?: string;
+			name?: string;
+			image?: string | null;
+		} = {};
+		if (mirrored.firstName && mirrored.lastName) {
+			userUpdate.firstName = mirrored.firstName;
+			userUpdate.lastName = mirrored.lastName;
+			userUpdate.name = `${mirrored.firstName} ${mirrored.lastName}`;
+		}
+		if (mirrored.profilePicture !== undefined) {
+			userUpdate.image = mirrored.profilePicture || null;
+		}
+		if (Object.keys(userUpdate).length > 0) {
+			await tx.update(user).set(userUpdate).where(eq(user.id, userId));
 		}
 	});
 
@@ -133,6 +145,9 @@ export function validateBaseAttribute(
 	key: string,
 	value: string,
 ): string | null {
+	if (key === "profilePicture") {
+		return "Upload profile pictures from the image picker";
+	}
 	if (!BASE_IDENTITY_KEYS.includes(key)) {
 		return `Unknown attribute key: ${key}`;
 	}

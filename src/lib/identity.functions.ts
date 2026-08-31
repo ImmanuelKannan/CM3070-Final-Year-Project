@@ -12,7 +12,9 @@ import {
 
 export const getIdentity = createServerFn({ method: "GET" }).handler(
 	async () => {
-		const userId = await getUserIdFromRequest("Sign in to manage your identity");
+		const userId = await getUserIdFromRequest(
+			"Sign in to manage your identity",
+		);
 		return getBaseIdentity(userId);
 	},
 );
@@ -20,7 +22,9 @@ export const getIdentity = createServerFn({ method: "GET" }).handler(
 export const updateIdentity = createServerFn({ method: "POST" })
 	.validator(normalizeIdentityAttributes)
 	.handler(async ({ data }) => {
-		const userId = await getUserIdFromRequest("Sign in to manage your identity");
+		const userId = await getUserIdFromRequest(
+			"Sign in to manage your identity",
+		);
 		const identity = await updateBaseIdentity(userId, data);
 		return { success: true, identity };
 	});
@@ -28,7 +32,9 @@ export const updateIdentity = createServerFn({ method: "POST" })
 export const updateIdentityAttribute = createServerFn({ method: "POST" })
 	.validator(normalizeUpdateIdentityAttributeInput)
 	.handler(async ({ data }) => {
-		const userId = await getUserIdFromRequest("Sign in to manage your identity");
+		const userId = await getUserIdFromRequest(
+			"Sign in to manage your identity",
+		);
 		const { key, value } = data;
 		const validationError = validateBaseAttribute(key, value);
 		if (validationError) {

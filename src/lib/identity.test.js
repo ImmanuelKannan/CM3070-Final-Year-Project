@@ -123,6 +123,9 @@ describe("validateBaseAttribute", () => {
 		expect(validateBaseAttribute("firstName", "   ")).toBe(
 			"First name is required",
 		);
+		expect(
+			validateBaseAttribute("profilePicture", "https://example.com/a.jpg"),
+		).toBe("Upload profile pictures from the image picker");
 		expect(validateBaseAttribute("bio", "hello")).toBeNull();
 	});
 });

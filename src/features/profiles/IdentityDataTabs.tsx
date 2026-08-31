@@ -20,6 +20,7 @@ type Props = {
 	onSaveAttribute?: (key: string, value: string) => Promise<void>;
 	resolved?: Record<string, string>;
 	emptyHint?: string;
+	identityExtras?: React.ReactNode;
 };
 
 function tabIndex(tab: ProfileTab): number {
@@ -34,6 +35,7 @@ export function IdentityDataTabs({
 	onSaveAttribute,
 	resolved,
 	emptyHint,
+	identityExtras,
 }: Props) {
 	const [internalActiveTab, setInternalActiveTab] =
 		useState<ProfileTab>("identity");
@@ -53,6 +55,9 @@ export function IdentityDataTabs({
 	};
 
 	const fields: FieldDef[] = TAB_FIELDS[activeTab];
+	const visibleFields = identityExtras
+		? fields.filter((field) => field.key !== "profilePicture")
+		: fields;
 
 	return (
 		<div className="rounded-2xl border border-line bg-bg-surface">
@@ -101,8 +106,11 @@ export function IdentityDataTabs({
 				aria-labelledby={`${tablistId}-tab-${activeTab}`}
 				className="p-6 sm:p-8"
 			>
+				{activeTab === "identity" && identityExtras ? (
+					<div className="mb-6">{identityExtras}</div>
+				) : null}
 				<div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-					{fields.map((f) => {
+					{visibleFields.map((f) => {
 						const span =
 							f.type === "textarea" || f.key === "profilePicture"
 								? "sm:col-span-2"
