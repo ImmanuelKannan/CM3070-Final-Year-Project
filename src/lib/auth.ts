@@ -5,6 +5,7 @@ import { jwt } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
 import { db } from "#/db";
+import { ALLOWED_ATTRIBUTE_KEYS } from "#/lib/profile-catalogue";
 import { normalizeRegistrationName } from "#/lib/registration";
 
 export const auth = betterAuth({
@@ -47,9 +48,6 @@ export const auth = betterAuth({
 	},
 	plugins: [
 		jwt({
-			jwks: {
-				disablePrivateKeyEncryption: process.env.NODE_ENV === "development",
-			},
 			jwt: {
 				issuer: process.env.BETTER_AUTH_URL,
 			},
@@ -57,7 +55,13 @@ export const auth = betterAuth({
 		oauthProvider({
 			loginPage: "/sign-in",
 			consentPage: "/oauth/consent",
-			scopes: ["openid", "profile", "email", "offline_access"],
+			scopes: [
+				"openid",
+				"profile",
+				"email",
+				"offline_access",
+				...ALLOWED_ATTRIBUTE_KEYS,
+			],
 			allowDynamicClientRegistration: false,
 			silenceWarnings: {
 				oauthAuthServerConfig: true,

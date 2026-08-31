@@ -1,0 +1,514 @@
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Pencil } from "lucide-react";
+import { useEffect, useId, useMemo, useState } from "react";
+
+import { getSession } from "#/lib/auth.functions";
+import { oauth2 } from "#/lib/auth-client";
+import {
+	applyOverriddenAttributes,
+	type PreviewAttribute,
+} from "#/lib/consent-preview";
+import {
+	getConsentPreview,
+	type ConsentPreviewResult,
+} from "#/lib/consent-preview.functions";
+import { messages } from "#/lib/i18n";
+import { ATTRIBUTE_FIELDS, validateAttribute } from "#/lib/profile-catalogue";
+import { cn } from "#/lib/utils";
+
+export const Route = createFileRoute("/oauth/consent")({
+	beforeLoad: async () => {
+		if (!(await getSession())) throw redirect({ to: "/sign-in" });
+	},
+	validateSearch: () => ({}),
+	component: ConsentPage,
+});
+
+function getErrorMessage(err: unknown, fallbackMessage: string): string {
+	if (err && typeof err === "object" && "message" in err) {
+		const message = (err as { message: unknown }).message;
+		if (typeof message === "string" && message.trim() !== "") return message;
+	}
+	return fallbackMessage;
+}
+
+function ConsentPage() {
+	const getPreviewFn = useServerFn(getConsentPreview);
+	const sourceGroupId = useId();
+
+	const rawSearch = typeof window !== "undefined" ? window.location.search : "";
+	const oauthQuery = rawSearch.startsWith("?")
+		? rawSearch.slice(1)
+		: rawSearch;
+
+	const [preview, setPreview] = useState<ConsentPreviewResult | null>(null);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const [submitting, setSubmitting] = useState(false);
+	const [selectedProfileId, setSelectedProfileId] = useState("default");
+
+	const [edits, setEdits] = useState<Record<string, string>>({});
+	const [editingKey, setEditingKey] = useState<string | null>(null);
+	const [editDraft, setEditDraft] = useState("");
+	const [editError, setEditError] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (!oauthQuery) {
+			setError(messages.consent.errorBody);
+			setLoading(false);
+			return;
+		}
+
+		let cancelled = false;
+		setLoading(true);
+		setError(null);
+
+		(async () => {
+			try {
+				const result = await getPreviewFn({
+					data: {
+						oauthQuery,
+						selectedProfileId:
+							selectedProfileId === "default" ? null : selectedProfileId,
+					},
+				});
+				if (!cancelled) setPreview(result);
+			} catch (err) {
+				if (!cancelled) {
+					setError(getErrorMessage(err, messages.consent.errorBody));
+				}
+			} finally {
+				if (!cancelled) setLoading(false);
+			}
+		})();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [oauthQuery, selectedProfileId, getPreviewFn]);
+
+	const displayAttributes = useMemo(
+		() => (preview ? applyOverriddenAttributes(preview.attributes, edits) : []),
+		[preview, edits],
+	);
+
+	const currentValue = (key: string): string =>
+		displayAttributes.find((a) => a.key === key)?.value ?? "";
+
+	const startEditingField = (key: string) => {
+		setEditingKey(key);
+		setEditDraft(currentValue(key));
+		setEditError(null);
+	};
+
+	const cancelEditingField = () => {
+		setEditingKey(null);
+		setEditDraft("");
+		setEditError(null);
+	};
+
+	const saveEditedField = () => {
+		if (!editingKey) return;
+		const trimmed = editDraft.trim();
+		const original =
+			preview?.attributes.find((a) => a.key === editingKey)?.value ?? "";
+
+		if (trimmed === "" || trimmed === original) {
+			// Empty or unchanged means "revert to the resolved source value".
+			setEdits((prev) => {
+				const next = { ...prev };
+				delete next[editingKey];
+				return next;
+			});
+			setEditingKey(null);
+			setEditDraft("");
+			setEditError(null);
+			return;
+		}
+
+		const fieldError = validateAttribute(editingKey, trimmed);
+		if (fieldError) {
+			setEditError(fieldError);
+			return;
+		}
+
+		setEdits((prev) => ({ ...prev, [editingKey]: trimmed }));
+		setEditingKey(null);
+		setEditDraft("");
+		setEditError(null);
+	};
+
+	const handleDecision = async (didAccept: boolean) => {
+		setSubmitting(true);
+		setError(null);
+		try {
+			const result = await oauth2.consent({ accept: didAccept });
+			if (result?.error) {
+				throw new Error(
+					result.error.message ||
+						result.error.statusText ||
+						"Consent request failed.",
+				);
+			}
+
+			const data = result?.data as
+				| { redirect: boolean; url: string }
+				| undefined;
+			if (data?.redirect) {
+				window.location.href = data.url;
+			} else if (!didAccept) {
+				window.location.assign("/");
+			} else {
+				setError(messages.consent.errorBody);
+				setSubmitting(false);
+			}
+		} catch (err) {
+			setError(getErrorMessage(err, "Consent request failed."));
+			setSubmitting(false);
+		}
+	};
+
+	const clientName = preview?.client.name?.trim() || preview?.client.id || "";
+	const hasRequestedAttributes = (preview?.requestedKeys.length ?? 0) > 0;
+	const consentBlocked = loading || !!error || editingKey !== null;
+
+	const requestMessage = messages.consent.wantsAccess.replace("{client}", clientName);
+
+	return (
+		<div className="mx-auto grid w-full max-w-lg gap-6 px-4">
+			<header className="flex flex-col items-center gap-3 text-center">
+				{preview?.client.icon ? (
+					<img
+						src={preview.client.icon}
+						className="size-14 rounded-full object-contain"
+					/>
+				) : (
+					<div
+						className="flex size-14 items-center justify-center rounded-full bg-lagoon text-xl font-bold text-foam"
+					>
+						{(clientName || "?").charAt(0).toUpperCase()}
+					</div>
+				)}
+				<div>
+					<h1 className="font-display text-2xl font-bold text-sea-ink">
+						{clientName || messages.consent.title}
+					</h1>
+					<p className="mt-1 text-sm text-sea-ink-soft">{requestMessage}</p>
+				</div>
+			</header>
+
+			{loading ? (
+				<p className="text-center text-sm text-sea-ink-soft">
+					{messages.consent.loading}
+				</p>
+			) : error ? (
+				<div
+					role="alert"
+					className="grid gap-1 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+				>
+					<p className="font-semibold">{messages.consent.errorHeading}</p>
+					<p>{error}</p>
+				</div>
+			) : preview ? (
+				<>
+					{hasRequestedAttributes ? (
+						<section
+							className="grid gap-3 rounded-2xl border border-line bg-bg-surface p-5"
+						>
+							<div>
+								<h2
+									id="requested-heading"
+									className="font-display text-lg font-bold text-sea-ink"
+								>
+									{messages.consent.requestedHeading}
+								</h2>
+								<p className="mt-0.5 text-sm text-sea-ink-soft">
+									{messages.consent.requestedDetailsMessage}
+								</p>
+							</div>
+
+							<fieldset className="grid gap-2">
+								<legend className="sr-only">
+									{messages.consent.sourceHeading}
+								</legend>
+								<SourceOption
+									name={sourceGroupId}
+									value="default"
+									label={messages.consent.baseIdentity}
+									hint={messages.consent.baseIdentityHint}
+									checked={selectedProfileId === "default"}
+									onSelect={() => setSelectedProfileId("default")}
+								/>
+								{preview.profiles.map((profile) => (
+									<SourceOption
+										key={profile.id}
+										name={sourceGroupId}
+										value={profile.id}
+										label={profile.name}
+										hint={profile.type}
+										suggested={profile.id === preview.suggestedProfileId}
+										checked={selectedProfileId === profile.id}
+										onSelect={() => setSelectedProfileId(profile.id)}
+									/>
+								))}
+							</fieldset>
+
+							<ul className="grid gap-1">
+								{displayAttributes.map((attr) => (
+									<AttributeRow
+										key={attr.key}
+										attribute={attr}
+										editing={editingKey === attr.key}
+										draft={editDraft}
+										editError={editError}
+										onStartEdit={() => startEditingField(attr.key)}
+										onCancelEdit={cancelEditingField}
+										onSaveEdit={saveEditedField}
+										onDraftChange={setEditDraft}
+									/>
+								))}
+							</ul>
+						</section>
+					) : (
+						<div className="rounded-2xl border border-line bg-bg-surface p-5">
+							<h2 className="font-display text-lg font-bold text-sea-ink">
+								{messages.consent.noAttributesTitle}
+							</h2>
+							<p className="mt-1 text-sm text-sea-ink-soft">
+								{messages.consent.noAttributesBody}
+							</p>
+						</div>
+					)}
+
+					<div className="flex items-center justify-end gap-3">
+						<button
+							type="button"
+							onClick={() => void handleDecision(false)}
+							disabled={submitting}
+							className="inline-flex items-center justify-center rounded-lg border border-line bg-bg-surface px-4 py-2.5 font-semibold text-sea-ink transition-colors hover:bg-bg-base focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+						>
+							{submitting
+								? messages.consent.rejecting
+								: messages.consent.deny}
+						</button>
+						<button
+							type="button"
+							onClick={() => void handleDecision(true)}
+							disabled={submitting || consentBlocked}
+							className="inline-flex items-center justify-center rounded-lg bg-sea-ink px-4 py-2.5 font-semibold text-foam no-underline transition-colors hover:bg-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+						>
+							{submitting
+								? messages.consent.allowing
+								: messages.consent.allow}
+						</button>
+					</div>
+				</>
+			) : null}
+		</div>
+	);
+}
+
+function SourceOption({
+	name,
+	value,
+	label,
+	hint,
+	suggested = false,
+	checked,
+	onSelect,
+}: {
+	name: string;
+	value: string;
+	label: string;
+	hint: string;
+	suggested?: boolean;
+	checked: boolean;
+	onSelect: () => void;
+}) {
+	const id = `${name}-${value}`;
+	return (
+		<div
+			className={cn(
+				"flex items-center justify-between gap-3 rounded-lg border p-3",
+				checked ? "border-lagoon bg-lagoon/5" : "border-line bg-bg-base/40",
+			)}
+		>
+			<label
+				htmlFor={id}
+				className="flex min-w-0 flex-1 cursor-pointer items-center gap-3"
+			>
+				<input
+					id={id}
+					type="radio"
+					name={name}
+					value={value}
+					checked={checked}
+					onChange={onSelect}
+					className="size-4 accent-lagoon-deep"
+				/>
+				<span className="min-w-0">
+					<span className="block truncate text-sm font-semibold text-sea-ink">
+						{label}
+					</span>
+					<span className="block text-xs text-sea-ink-soft">{hint}</span>
+				</span>
+			</label>
+			{suggested ? (
+				<span className="shrink-0 rounded-full bg-lagoon/15 px-2 py-0.5 text-xs font-semibold text-lagoon-deep">
+					{messages.consent.suggested}
+				</span>
+			) : null}
+		</div>
+	);
+}
+
+function AttributeRow({
+	attribute,
+	editing,
+	draft,
+	editError,
+	onStartEdit,
+	onCancelEdit,
+	onSaveEdit,
+	onDraftChange,
+}: {
+	attribute: PreviewAttribute;
+	editing: boolean;
+	draft: string;
+	editError: string | null;
+	onStartEdit: () => void;
+	onCancelEdit: () => void;
+	onSaveEdit: () => void;
+	onDraftChange: (value: string) => void;
+}) {
+	const field = ATTRIBUTE_FIELDS[attribute.key];
+	const inputId = useId();
+	const empty = attribute.value.trim() === "";
+
+	if (editing) {
+		return (
+			<li className="rounded-lg border border-lagoon bg-bg-base/40 p-3">
+				<label
+					htmlFor={inputId}
+					className="mb-1.5 block text-sm font-semibold text-sea-ink"
+				>
+					{attribute.label}
+				</label>
+				<div className="grid gap-2">
+					<EditInput
+						id={inputId}
+						fieldType={field?.type}
+						options={field?.options}
+						placeholder={field?.placeholder}
+						value={draft}
+						onChange={onDraftChange}
+					/>
+					{editError ? (
+						<p role="alert" className="text-xs font-semibold text-destructive">
+							{editError}
+						</p>
+					) : null}
+					<div className="flex items-center gap-2">
+						<button
+							type="button"
+							onClick={onSaveEdit}
+							className="inline-flex items-center justify-center rounded-lg bg-sea-ink px-3 py-1.5 text-sm font-semibold text-foam transition-colors hover:bg-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+						>
+							{messages.consent.save}
+						</button>
+						<button
+							type="button"
+							onClick={onCancelEdit}
+							className="inline-flex items-center justify-center rounded-lg border border-line px-3 py-1.5 text-sm font-semibold text-sea-ink transition-colors hover:bg-bg-base focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+						>
+							{messages.consent.cancel}
+						</button>
+					</div>
+				</div>
+			</li>
+		);
+	}
+
+	return (
+		<li className="flex items-center justify-between gap-3 px-3 py-2.5">
+			<div className="min-w-0">
+				<p className="text-sm font-semibold text-sea-ink">{attribute.label}</p>
+				<p className={cn("truncate text-sm", empty && "text-sea-ink-soft")}>
+					{empty ? messages.consent.notProvided : attribute.value}
+				</p>
+			</div>
+			<div className="flex shrink-0 items-center gap-2">
+				<button
+					type="button"
+					onClick={onStartEdit}
+					className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-sea-ink transition-colors hover:bg-bg-base focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+				>
+					<Pencil className="h-3.5 w-3.5" />
+					{messages.consent.edit}
+				</button>
+			</div>
+		</li>
+	);
+}
+
+function EditInput({
+	id,
+	fieldType,
+	options,
+	placeholder,
+	value,
+	onChange,
+}: {
+	id: string;
+	fieldType: string | undefined;
+	options: readonly string[] | undefined;
+	placeholder: string | undefined;
+	value: string;
+	onChange: (value: string) => void;
+}) {
+	const classes =
+		"w-full rounded-lg border border-line bg-bg-surface px-3.5 py-2.5 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring";
+
+	if (fieldType === "textarea") {
+		return (
+			<textarea
+				id={id}
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+				placeholder={placeholder}
+				rows={3}
+				className={cn(classes, "min-h-20 resize-y")}
+			/>
+		);
+	}
+
+	if (fieldType === "select") {
+		return (
+			<select
+				id={id}
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+				className={cn(classes, "pr-9")}
+			>
+				<option value="">{placeholder ?? ""}</option>
+				{options?.map((option) => (
+					<option key={option} value={option}>
+						{option}
+					</option>
+				))}
+			</select>
+		);
+	}
+
+	return (
+		<input
+			id={id}
+			type={fieldType ?? "text"}
+			value={value}
+			onChange={(e) => onChange(e.target.value)}
+			placeholder={placeholder}
+			className={classes}
+		/>
+	);
+}

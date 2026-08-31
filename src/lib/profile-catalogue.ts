@@ -596,7 +596,6 @@ export function emergencyGroupErrors(
 	return errors;
 }
 
-/** Returns the first validation error message for a single attribute, or "". */
 export function validateAttribute(key: string, value: unknown): string {
 	const schema = ATTRIBUTE_SCHEMAS[key];
 	if (!schema) {
