@@ -5,13 +5,14 @@ import { useEffect, useId, useMemo, useState } from "react";
 
 import { getSession } from "#/lib/auth.functions";
 import { oauth2 } from "#/lib/auth-client";
+import { approveConsentGrant } from "#/lib/consent-grants.functions";
 import {
 	applyOverriddenAttributes,
 	type PreviewAttribute,
 } from "#/lib/consent-preview";
 import {
-	getConsentPreview,
 	type ConsentPreviewResult,
+	getConsentPreview,
 } from "#/lib/consent-preview.functions";
 import { messages } from "#/lib/i18n";
 import { ATTRIBUTE_FIELDS, validateAttribute } from "#/lib/profile-catalogue";
@@ -35,12 +36,11 @@ function getErrorMessage(err: unknown, fallbackMessage: string): string {
 
 function ConsentPage() {
 	const getPreviewFn = useServerFn(getConsentPreview);
+	const approveGrantFn = useServerFn(approveConsentGrant);
 	const sourceGroupId = useId();
 
 	const rawSearch = typeof window !== "undefined" ? window.location.search : "";
-	const oauthQuery = rawSearch.startsWith("?")
-		? rawSearch.slice(1)
-		: rawSearch;
+	const oauthQuery = rawSearch.startsWith("?") ? rawSearch.slice(1) : rawSearch;
 
 	const [preview, setPreview] = useState<ConsentPreviewResult | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -143,7 +143,25 @@ function ConsentPage() {
 		setSubmitting(true);
 		setError(null);
 		try {
-			const result = await oauth2.consent({ accept: didAccept });
+			if (didAccept) {
+				const data = await approveGrantFn({
+					data: {
+						oauthQuery,
+						selectedProfileId:
+							selectedProfileId === "default" ? null : selectedProfileId,
+						edits,
+					},
+				});
+				if (data.redirect) {
+					window.location.href = data.url;
+					return;
+				}
+				setError(messages.consent.errorBody);
+				setSubmitting(false);
+				return;
+			}
+
+			const result = await oauth2.consent({ accept: false });
 			if (result?.error) {
 				throw new Error(
 					result.error.message ||
@@ -157,11 +175,8 @@ function ConsentPage() {
 				| undefined;
 			if (data?.redirect) {
 				window.location.href = data.url;
-			} else if (!didAccept) {
-				window.location.assign("/");
 			} else {
-				setError(messages.consent.errorBody);
-				setSubmitting(false);
+				window.location.assign("/");
 			}
 		} catch (err) {
 			setError(getErrorMessage(err, "Consent request failed."));
@@ -173,7 +188,10 @@ function ConsentPage() {
 	const hasRequestedAttributes = (preview?.requestedKeys.length ?? 0) > 0;
 	const consentBlocked = loading || !!error || editingKey !== null;
 
-	const requestMessage = messages.consent.wantsAccess.replace("{client}", clientName);
+	const requestMessage = messages.consent.wantsAccess.replace(
+		"{client}",
+		clientName,
+	);
 
 	return (
 		<div className="mx-auto grid w-full max-w-lg gap-6 px-4">
@@ -181,12 +199,11 @@ function ConsentPage() {
 				{preview?.client.icon ? (
 					<img
 						src={preview.client.icon}
+						alt=""
 						className="size-14 rounded-full object-contain"
 					/>
 				) : (
-					<div
-						className="flex size-14 items-center justify-center rounded-full bg-lagoon text-xl font-bold text-foam"
-					>
+					<div className="flex size-14 items-center justify-center rounded-full bg-lagoon text-xl font-bold text-foam">
 						{(clientName || "?").charAt(0).toUpperCase()}
 					</div>
 				)}
@@ -213,9 +230,7 @@ function ConsentPage() {
 			) : preview ? (
 				<>
 					{hasRequestedAttributes ? (
-						<section
-							className="grid gap-3 rounded-2xl border border-line bg-bg-surface p-5"
-						>
+						<section className="grid gap-3 rounded-2xl border border-line bg-bg-surface p-5">
 							<div>
 								<h2
 									id="requested-heading"
@@ -288,9 +303,7 @@ function ConsentPage() {
 							disabled={submitting}
 							className="inline-flex items-center justify-center rounded-lg border border-line bg-bg-surface px-4 py-2.5 font-semibold text-sea-ink transition-colors hover:bg-bg-base focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
 						>
-							{submitting
-								? messages.consent.rejecting
-								: messages.consent.deny}
+							{submitting ? messages.consent.rejecting : messages.consent.deny}
 						</button>
 						<button
 							type="button"
@@ -298,9 +311,7 @@ function ConsentPage() {
 							disabled={submitting || consentBlocked}
 							className="inline-flex items-center justify-center rounded-lg bg-sea-ink px-4 py-2.5 font-semibold text-foam no-underline transition-colors hover:bg-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
 						>
-							{submitting
-								? messages.consent.allowing
-								: messages.consent.allow}
+							{submitting ? messages.consent.allowing : messages.consent.allow}
 						</button>
 					</div>
 				</>

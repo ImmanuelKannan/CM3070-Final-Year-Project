@@ -12,6 +12,7 @@ import {
 import { user } from "./auth-schema.ts";
 
 export * from "./auth-schema.ts";
+export * from "./consent-grants-schema.ts";
 export * from "./oauth-schema.ts";
 
 export const identityAttributes = pgTable(

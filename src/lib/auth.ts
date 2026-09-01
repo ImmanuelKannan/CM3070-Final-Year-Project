@@ -5,6 +5,7 @@ import { jwt } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
 import { db } from "#/db";
+import { resolveOAuthProviderConsentReference } from "#/lib/consent-grants";
 import { ALLOWED_ATTRIBUTE_KEYS } from "#/lib/profile-catalogue";
 import { normalizeRegistrationName } from "#/lib/registration";
 
@@ -66,6 +67,12 @@ export const auth = betterAuth({
 			silenceWarnings: {
 				oauthAuthServerConfig: true,
 				openidConfig: true,
+			},
+			postLogin: {
+				page: "/oauth/consent",
+				shouldRedirect: () => false,
+				consentReferenceId: async ({ user, scopes }) =>
+					resolveOAuthProviderConsentReference(user.id, scopes),
 			},
 		}),
 		tanstackStartCookies(),

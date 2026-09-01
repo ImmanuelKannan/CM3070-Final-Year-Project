@@ -5,6 +5,7 @@ import {
 	pgTable,
 	text,
 	timestamp,
+	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 import { session, user } from "./auth-schema";
@@ -126,6 +127,11 @@ export const oauthConsent = pgTable(
 	(table) => [
 		index("oauth_consent_client_id_idx").on(table.clientId),
 		index("oauth_consent_user_id_idx").on(table.userId),
+		uniqueIndex("oauth_consent_client_user_reference_idx").on(
+			table.clientId,
+			table.userId,
+			table.referenceId,
+		),
 	],
 );
 

@@ -162,7 +162,8 @@ export const messages = {
 		title: "Authorize access",
 		wantsAccess: "{client} wants to access your identity",
 		requestedHeading: "Requested details",
-		requestedDetailsMessage: "These are the details this application is asking for.",
+		requestedDetailsMessage:
+			"These are the details this application is asking for.",
 		sourceHeading: "Share from",
 		baseIdentity: "Base identity",
 		baseIdentityHint: "Your default identity details.",

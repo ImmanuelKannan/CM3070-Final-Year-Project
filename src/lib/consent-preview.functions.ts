@@ -7,8 +7,8 @@ import { db } from "#/db";
 import { oauthClient } from "#/db/schema";
 import { getUserIdFromRequest } from "#/lib/auth.server";
 import {
-	type PreviewAttribute,
 	getRequestedIdentityAttributeKeys,
+	type PreviewAttribute,
 	resolveConsentPreviewAttributes,
 } from "#/lib/consent-preview";
 import { getProfile, listProfiles } from "#/lib/contextual-profiles";
@@ -122,7 +122,11 @@ export const getConsentPreview = createServerFn({ method: "POST" })
 			profileOverrides = profile.attributes;
 		}
 
-		const resolvedAttributes = resolveConsentPreviewAttributes(baseProfile, profileOverrides, requestedKeys);
+		const resolvedAttributes = resolveConsentPreviewAttributes(
+			baseProfile,
+			profileOverrides,
+			requestedKeys,
+		);
 
 		return {
 			client: {
