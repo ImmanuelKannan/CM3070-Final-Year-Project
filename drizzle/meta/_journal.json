@@ -43,6 +43,13 @@
       "when": 1788239970927,
       "tag": "0005_abnormal_nico_minoru",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788352995758,
+      "tag": "0006_glamorous_jamie_braddock",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
 import {
 	boolean,
+	check,
 	jsonb,
 	pgTable,
 	text,
@@ -8,7 +10,7 @@ import {
 	uuid,
 } from "drizzle-orm/pg-core";
 
-import type { ConsentGrantSource } from "#/lib/consent-grants";
+import type { ConsentDecision, ConsentGrantSource } from "#/lib/consent-grants";
 
 import { user } from "./auth-schema.ts";
 import { oauthClient } from "./oauth-schema.ts";
@@ -40,6 +42,36 @@ export const consentGrants = pgTable(
 		uniqueIndex("consent_grants_user_reference_idx").on(
 			table.userId,
 			table.referenceId,
+		),
+	],
+);
+
+export const consentDecisions = pgTable(
+	"consent_decisions",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		referenceId: text("reference_id").notNull(),
+		clientId: text("client_id")
+			.notNull()
+			.references(() => oauthClient.clientId, { onDelete: "cascade" }),
+		canonicalQuery: text("canonical_query").notNull(),
+		canonicalScopes: jsonb("canonical_scopes").$type<string[]>().notNull(),
+		decision: text("decision").$type<ConsentDecision>().notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => [
+		uniqueIndex("consent_decisions_user_reference_idx").on(
+			table.userId,
+			table.referenceId,
+		),
+		check(
+			"consent_decisions_decision_check",
+			sql`${table.decision} in ('approved', 'rejected')`,
 		),
 	],
 );
