@@ -445,6 +445,16 @@ export const ATTRIBUTE_LABELS: Record<string, string> = Object.fromEntries(
 export const ALLOWED_ATTRIBUTE_KEYS: readonly string[] =
 	Object.keys(ATTRIBUTE_FIELDS);
 
+export const ATTRIBUTE_OIDC_CLAIMS: Record<string, string> = {
+	profilePicture: "picture",
+	firstName: "given_name",
+	middleName: "middle_name",
+	lastName: "family_name",
+	displayName: "name",
+	username: "preferred_username",
+	email: "email",
+};
+
 // --- Per-attribute Zod validation -----------------------------------------
 // Each schema is `z.string()`. Empty strings are allowed for optional fields
 // (they fall back to the Base Identity). Fields marked "required" here reject

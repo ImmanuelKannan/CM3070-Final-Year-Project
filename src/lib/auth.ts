@@ -5,6 +5,10 @@ import { jwt } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
 import { db } from "#/db";
+import {
+	getConsentBoundUserInfoClaims,
+	suppressIdentityTokenClaims,
+} from "#/lib/consent-claims";
 import { resolveOAuthProviderConsentReference } from "#/lib/consent-grants";
 import { ALLOWED_ATTRIBUTE_KEYS } from "#/lib/profile-catalogue";
 import { normalizeRegistrationName } from "#/lib/registration";
@@ -74,6 +78,16 @@ export const auth = betterAuth({
 				consentReferenceId: async ({ user, scopes }) =>
 					resolveOAuthProviderConsentReference(user.id, scopes),
 			},
+			customAccessTokenClaims: ({ referenceId }) =>
+				referenceId ? { referenceId } : {},
+			customIdTokenClaims: suppressIdentityTokenClaims,
+			customUserInfoClaims: ({ scopes, jwt }) =>
+				getConsentBoundUserInfoClaims({
+					sub: jwt.sub,
+					clientId: jwt.client_id ?? jwt.azp,
+					referenceId: jwt.referenceId,
+					scopes,
+				}),
 		}),
 		tanstackStartCookies(),
 	],

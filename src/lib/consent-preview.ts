@@ -3,19 +3,15 @@ import { APIError } from "better-auth/api";
 import {
 	ALLOWED_ATTRIBUTE_KEYS,
 	ATTRIBUTE_LABELS,
+	ATTRIBUTE_OIDC_CLAIMS,
 } from "#/lib/profile-catalogue";
 
 export const STANDARD_SCOPE_ATTRIBUTES: Record<string, readonly string[]> = {
 	openid: [],
 	email: ["email"],
-	profile: [
-		"profilePicture",
-		"firstName",
-		"middleName",
-		"lastName",
-		"displayName",
-		"username",
-	],
+	profile: Object.keys(ATTRIBUTE_OIDC_CLAIMS).filter(
+		(attribute) => attribute !== "email",
+	),
 	offline_access: [],
 };
 
