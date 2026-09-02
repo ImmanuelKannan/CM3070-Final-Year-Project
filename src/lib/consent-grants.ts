@@ -9,7 +9,7 @@ export const IGNORED_BETTER_AUTH_QUERY_KEYS = [
 	"ba_iat",
 	"ba_pl",
 	"ba_param",
-  "prompt",
+	"prompt",
 ] as const;
 
 export const consentGrantSourceSchema = z.discriminatedUnion("kind", [
@@ -22,6 +22,13 @@ export const consentGrantSourceSchema = z.discriminatedUnion("kind", [
 	}),
 ]);
 export type ConsentGrantSource = z.infer<typeof consentGrantSourceSchema>;
+
+export const consentDecisionSchema = z.enum(["approved", "rejected"]);
+export type ConsentDecision = z.infer<typeof consentDecisionSchema>;
+
+export function normalizeScopes(scopes: readonly string[]): string[] {
+	return [...new Set(scopes)].sort();
+}
 
 export const consentGrantSnapshotSchema = z.object({
 	referenceId: z.string(),
@@ -36,24 +43,18 @@ export const consentGrantSnapshotSchema = z.object({
 
 export type ConsentGrantSnapshot = z.infer<typeof consentGrantSnapshotSchema>;
 
- /**
-   * Removes the better auth query keys, and normalizes
- * param order
- */
 export function normalizeAuthorizationQuery(
 	oauthQuery: string,
 	scopes: readonly string[],
 ): string {
 	const params = new URLSearchParams(oauthQuery);
-	for (const queryKeyToIgnore of IGNORED_BETTER_AUTH_QUERY_KEYS) params.delete(queryKeyToIgnore);
-	params.set("scope", [...new Set(scopes)].sort().join(" "));
+	for (const queryKeyToIgnore of IGNORED_BETTER_AUTH_QUERY_KEYS)
+		params.delete(queryKeyToIgnore);
+	params.set("scope", normalizeScopes(scopes).join(" "));
 	params.sort();
 	return params.toString();
 }
 
- /**
-   * Generates a stable hash given the normalized query string
- */
 export function generateStableQueryHash(
 	userId: string,
 	normalizedQueryString: string,

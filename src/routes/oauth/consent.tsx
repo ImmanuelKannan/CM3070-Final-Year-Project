@@ -4,8 +4,10 @@ import { Pencil } from "lucide-react";
 import { useEffect, useId, useMemo, useState } from "react";
 
 import { getSession } from "#/lib/auth.functions";
-import { oauth2 } from "#/lib/auth-client";
-import { approveConsentGrant } from "#/lib/consent-grants.functions";
+import {
+	approveConsentGrant,
+	rejectConsentGrant,
+} from "#/lib/consent-grants.functions";
 import {
 	applyOverriddenAttributes,
 	type PreviewAttribute,
@@ -37,6 +39,7 @@ function getErrorMessage(err: unknown, fallbackMessage: string): string {
 function ConsentPage() {
 	const getPreviewFn = useServerFn(getConsentPreview);
 	const approveGrantFn = useServerFn(approveConsentGrant);
+	const rejectGrantFn = useServerFn(rejectConsentGrant);
 	const sourceGroupId = useId();
 
 	const rawSearch = typeof window !== "undefined" ? window.location.search : "";
@@ -45,7 +48,9 @@ function ConsentPage() {
 	const [preview, setPreview] = useState<ConsentPreviewResult | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [submitting, setSubmitting] = useState(false);
+	const [pendingDecision, setPendingDecision] = useState<
+		"approve" | "reject" | null
+	>(null);
 	const [selectedProfileId, setSelectedProfileId] = useState("default");
 
 	const [edits, setEdits] = useState<Record<string, string>>({});
@@ -139,48 +144,28 @@ function ConsentPage() {
 		setEditError(null);
 	};
 
-	const handleDecision = async (didAccept: boolean) => {
-		setSubmitting(true);
+	const handleDecision = async (decision: "approve" | "reject") => {
+		if (pendingDecision !== null) return;
+		setPendingDecision(decision);
 		setError(null);
 		try {
-			if (didAccept) {
-				const data = await approveGrantFn({
-					data: {
-						oauthQuery,
-						selectedProfileId:
-							selectedProfileId === "default" ? null : selectedProfileId,
-						edits,
-					},
-				});
-				if (data.redirect) {
-					window.location.href = data.url;
-					return;
-				}
-				setError(messages.consent.errorBody);
-				setSubmitting(false);
-				return;
-			}
+			const data =
+				decision === "approve"
+					? await approveGrantFn({
+							data: {
+								oauthQuery,
+								selectedProfileId:
+									selectedProfileId === "default" ? null : selectedProfileId,
+								edits,
+							},
+						})
+					: await rejectGrantFn({ data: { oauthQuery } });
 
-			const result = await oauth2.consent({ accept: false });
-			if (result?.error) {
-				throw new Error(
-					result.error.message ||
-						result.error.statusText ||
-						"Consent request failed.",
-				);
-			}
-
-			const data = result?.data as
-				| { redirect: boolean; url: string }
-				| undefined;
-			if (data?.redirect) {
-				window.location.href = data.url;
-			} else {
-				window.location.assign("/");
-			}
+			if (!data.redirect) throw new Error(messages.consent.errorBody);
+			window.location.href = data.url;
 		} catch (err) {
-			setError(getErrorMessage(err, "Consent request failed."));
-			setSubmitting(false);
+			setError(getErrorMessage(err, messages.consent.errorBody));
+			setPendingDecision(null);
 		}
 	};
 
@@ -299,19 +284,25 @@ function ConsentPage() {
 					<div className="flex items-center justify-end gap-3">
 						<button
 							type="button"
-							onClick={() => void handleDecision(false)}
-							disabled={submitting}
+							onClick={() => void handleDecision("reject")}
+							disabled={pendingDecision !== null}
+							aria-busy={pendingDecision === "reject"}
 							className="inline-flex items-center justify-center rounded-lg border border-line bg-bg-surface px-4 py-2.5 font-semibold text-sea-ink transition-colors hover:bg-bg-base focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
 						>
-							{submitting ? messages.consent.rejecting : messages.consent.deny}
+							{pendingDecision === "reject"
+								? messages.consent.rejecting
+								: messages.consent.deny}
 						</button>
 						<button
 							type="button"
-							onClick={() => void handleDecision(true)}
-							disabled={submitting || consentBlocked}
+							onClick={() => void handleDecision("approve")}
+							disabled={pendingDecision !== null || consentBlocked}
+							aria-busy={pendingDecision === "approve"}
 							className="inline-flex items-center justify-center rounded-lg bg-sea-ink px-4 py-2.5 font-semibold text-foam no-underline transition-colors hover:bg-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
 						>
-							{submitting ? messages.consent.allowing : messages.consent.allow}
+							{pendingDecision === "approve"
+								? messages.consent.allowing
+								: messages.consent.allow}
 						</button>
 					</div>
 				</>
