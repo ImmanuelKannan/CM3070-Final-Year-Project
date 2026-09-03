@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
 	boolean,
 	check,
+	index,
 	jsonb,
 	pgTable,
 	text,
@@ -37,12 +38,33 @@ export const consentGrants = pgTable(
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
 			.defaultNow(),
+		revokedAt: timestamp("revoked_at", { withTimezone: true }),
 	},
 	(table) => [
 		uniqueIndex("consent_grants_user_reference_idx").on(
 			table.userId,
 			table.referenceId,
 		),
+	],
+);
+
+export const consentRevocations = pgTable(
+	"consent_revocations",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		clientId: text("client_id")
+			.notNull()
+			.references(() => oauthClient.clientId, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => [
+		index("consent_revocations_user_id_idx").on(table.userId),
+		index("consent_revocations_client_id_idx").on(table.clientId),
 	],
 );
 
