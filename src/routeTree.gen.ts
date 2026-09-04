@@ -19,6 +19,8 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
 import { Route as ApiProfilePictureRouteImport } from './routes/api/profile-picture'
 import { Route as OauthConsentRouteImport } from './routes/oauth/consent'
+import { Route as AuthenticatedAuthorizedAppsIndexRouteImport } from './routes/_authenticated/authorized-apps.index'
+import { Route as AuthenticatedAuthorizedAppsClientIdRouteImport } from './routes/_authenticated/authorized-apps.$clientId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -72,6 +74,18 @@ const OauthConsentRoute = OauthConsentRouteImport.update({
   path: '/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAuthorizedAppsIndexRoute =
+  AuthenticatedAuthorizedAppsIndexRouteImport.update({
+    id: '/authorized-apps/',
+    path: '/authorized-apps/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAuthorizedAppsClientIdRoute =
+  AuthenticatedAuthorizedAppsClientIdRouteImport.update({
+    id: '/authorized-apps/$clientId',
+    path: '/authorized-apps/$clientId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -88,7 +102,9 @@ export interface FileRoutesByFullPath {
   '/profiles': typeof AuthenticatedProfilesRoute
   '/api/profile-picture': typeof ApiProfilePictureRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/authorized-apps/$clientId': typeof AuthenticatedAuthorizedAppsClientIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/authorized-apps/': typeof AuthenticatedAuthorizedAppsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,7 +116,9 @@ export interface FileRoutesByTo {
   '/profiles': typeof AuthenticatedProfilesRoute
   '/api/profile-picture': typeof ApiProfilePictureRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/authorized-apps/$clientId': typeof AuthenticatedAuthorizedAppsClientIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/authorized-apps': typeof AuthenticatedAuthorizedAppsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -114,7 +132,9 @@ export interface FileRoutesById {
   '/_authenticated/profiles': typeof AuthenticatedProfilesRoute
   '/api/profile-picture': typeof ApiProfilePictureRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/_authenticated/authorized-apps/$clientId': typeof AuthenticatedAuthorizedAppsClientIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/_authenticated/authorized-apps/': typeof AuthenticatedAuthorizedAppsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -128,7 +148,9 @@ export interface FileRouteTypes {
     | '/profiles'
     | '/api/profile-picture'
     | '/oauth/consent'
+    | '/authorized-apps/$clientId'
     | '/api/auth/$'
+    | '/authorized-apps/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -140,7 +162,9 @@ export interface FileRouteTypes {
     | '/profiles'
     | '/api/profile-picture'
     | '/oauth/consent'
+    | '/authorized-apps/$clientId'
     | '/api/auth/$'
+    | '/authorized-apps'
   id:
     | '__root__'
     | '/'
@@ -153,7 +177,9 @@ export interface FileRouteTypes {
     | '/_authenticated/profiles'
     | '/api/profile-picture'
     | '/oauth/consent'
+    | '/_authenticated/authorized-apps/$clientId'
     | '/api/auth/$'
+    | '/_authenticated/authorized-apps/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -240,6 +266,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/authorized-apps/': {
+      id: '/_authenticated/authorized-apps/'
+      path: '/authorized-apps'
+      fullPath: '/authorized-apps/'
+      preLoaderRoute: typeof AuthenticatedAuthorizedAppsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/authorized-apps/$clientId': {
+      id: '/_authenticated/authorized-apps/$clientId'
+      path: '/authorized-apps/$clientId'
+      fullPath: '/authorized-apps/$clientId'
+      preLoaderRoute: typeof AuthenticatedAuthorizedAppsClientIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -253,11 +293,16 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProfilesRoute: typeof AuthenticatedProfilesRoute
+  AuthenticatedAuthorizedAppsClientIdRoute: typeof AuthenticatedAuthorizedAppsClientIdRoute
+  AuthenticatedAuthorizedAppsIndexRoute: typeof AuthenticatedAuthorizedAppsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProfilesRoute: AuthenticatedProfilesRoute,
+  AuthenticatedAuthorizedAppsClientIdRoute:
+    AuthenticatedAuthorizedAppsClientIdRoute,
+  AuthenticatedAuthorizedAppsIndexRoute: AuthenticatedAuthorizedAppsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -279,12 +324,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

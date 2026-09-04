@@ -1,5 +1,5 @@
 import { APIError } from "better-auth/api";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "#/db";
@@ -24,9 +24,9 @@ export type ConsentGrantClaimsSource = {
 };
 
 /**
-  * Prepares the identity data previously agreed by the user
-  * to be sent back to the same app
-  */
+ * Prepares the identity data previously agreed by the user
+ * to be sent back to the same app
+ */
 
 export function resolveConsentGrantClaims(
 	grant: ConsentGrantClaimsSource,
@@ -70,8 +70,8 @@ const accessTokenReferenceSchema = z.object({
 });
 
 /**
-  * Verifies that access token belongs to grant
-*/
+ * Verifies that access token belongs to grant
+ */
 export async function getConsentBoundUserInfoClaims(context: {
 	sub: unknown;
 	clientId: unknown;
@@ -98,6 +98,7 @@ export async function getConsentBoundUserInfoClaims(context: {
 			and(
 				eq(consentGrants.userId, reference.data.sub),
 				eq(consentGrants.referenceId, reference.data.referenceId),
+				isNull(consentGrants.revokedAt),
 			),
 		)
 		.limit(1);

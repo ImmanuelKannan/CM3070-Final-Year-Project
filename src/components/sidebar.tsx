@@ -7,7 +7,7 @@ import { authClient } from "#/lib/auth-client";
 import { messages } from "#/lib/i18n";
 
 type ActiveNavItem = {
-	to: "/profiles";
+	to: "/profiles" | "/authorized-apps";
 	label: string;
 	icon: LucideIcon;
 	disabled: false;
@@ -36,10 +36,10 @@ const NAV_ITEMS: readonly SidebarItem[] = [
 		comingSoon: messages.nav.comingSoon,
 	},
 	{
+		to: "/authorized-apps",
 		label: messages.nav.connectedApps,
 		icon: Link2,
-		disabled: true,
-		comingSoon: messages.nav.comingSoon,
+		disabled: false,
 	},
 	{
 		label: messages.nav.developer,
@@ -167,7 +167,7 @@ function SidebarNavLink({ item }: { item: SidebarItem }) {
 	return (
 		<Link
 			to={item.to}
-			activeOptions={{ exact: true }}
+			activeOptions={{ exact: item.to === "/profiles" }}
 			className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-sea-ink-soft no-underline transition-colors hover:bg-lagoon/10 hover:text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring aria-[current=page]:bg-lagoon/20 aria-[current=page]:text-sea-ink md:py-2.5"
 		>
 			<Icon className="size-4" aria-hidden="true" />

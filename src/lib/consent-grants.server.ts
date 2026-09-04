@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { APIError } from "better-auth/api";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "#/db";
 import {
@@ -64,6 +64,7 @@ const CONFLICT_ALREADY_REJECTED =
 	"This authorization request has already been rejected";
 const CONFLICT_DIFFERENT_APPROVAL =
 	"This authorization request already has a different approval";
+const CONFLICT_REVOKED = "This authorization has been revoked by the user";
 const INVALID_REDIRECT_MESSAGE = "OAuth provider returned an invalid redirect";
 
 export async function approveConsentGrantFromRequest(
@@ -241,13 +242,7 @@ async function applyConsentDecision(
 		headers,
 	} = input;
 
-	// The decision is committed before provider delivery, so invalid or expired
-	// requests are also recorded — every submission stays visible in history.
 	const delivery = await db.transaction(async (tx) => {
-		await tx.execute(
-			sql`select pg_advisory_xact_lock(hashtextextended(${referenceId}, 0))`,
-		);
-
 		const decisionKey = and(
 			eq(consentDecisions.userId, userId),
 			eq(consentDecisions.referenceId, referenceId),
@@ -270,8 +265,6 @@ async function applyConsentDecision(
 						message: CONFLICT_ALREADY_REJECTED,
 					});
 				}
-				// Rejected retry: replay the same effective decision without
-				// duplicating the durable record.
 				return "reject";
 			}
 			if (decision === "rejected") {
@@ -290,6 +283,11 @@ async function applyConsentDecision(
 				.from(consentGrants)
 				.where(grantKey)
 				.limit(1);
+			if (existingGrant?.revokedAt) {
+				throw new APIError("CONFLICT", {
+					message: CONFLICT_REVOKED,
+				});
+			}
 			if (
 				!existingGrant ||
 				!doesConsentGrantMatchDataSnapshot(existingGrant, snapshot)
@@ -313,12 +311,6 @@ async function applyConsentDecision(
 			return "reject";
 		}
 
-		// First approval: one business decision, one grant, and one reusable
-		// provider consent are committed atomically before any provider work.
-		// The advisory lock and the existing-decision check above serialize
-		// concurrent requests, so the decision and grant inserts cannot collide.
-		// The provider consent can already exist (provider-flow consents), so it
-		// keeps conflict handling to take the provider's update path instead.
 		if (!snapshot) {
 			throw new APIError("INTERNAL_SERVER_ERROR", {
 				message: "Missing approval snapshot",

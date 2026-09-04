@@ -158,6 +158,30 @@ export const messages = {
 			remove: "Remove selected image",
 		},
 	},
+	authorizedApps: {
+		title: "Connected apps",
+		pageText:
+			"Applications you've given access to your identity. Revoke access to cut off an app immediately.",
+		empty: "No connected apps yet.",
+		emptyHint:
+			"When you authorize an app, it will appear here until you revoke access.",
+		scopesHeading: "Permissions",
+		attributesHeading: "Latest shared details",
+		noAttributes: "No identity details shared yet.",
+		lastShared: "Last shared {when}",
+		revoke: "Revoke access",
+		revoking: "Revoking…",
+		revokeConfirmTitle: "Revoke access for {name}?",
+		revokeConfirmBody:
+			"This signs the app out and stops it from reading your identity. You can re-authorize it later if you change your mind.",
+		revokeErrorBody:
+			"Check your connection and try again. If the problem keeps happening, reload the page.",
+		notFoundHeading: "App not found",
+		notFoundBody:
+			"This app isn't authorized for your account, or its access was already revoked.",
+		backToList: "Back to connected apps",
+		detailAppClientLabel: "App identifier",
+	},
 	consent: {
 		title: "Authorize access",
 		wantsAccess: "{client} wants to access your identity",
