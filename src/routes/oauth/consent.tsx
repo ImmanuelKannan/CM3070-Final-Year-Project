@@ -17,7 +17,11 @@ import {
 	getConsentPreview,
 } from "#/lib/consent-preview.functions";
 import { messages } from "#/lib/i18n";
-import { ATTRIBUTE_FIELDS, validateAttribute } from "#/lib/profile-catalogue";
+import {
+	ATTRIBUTE_FIELDS,
+	PROFILE_TYPE_LABELS,
+	validateAttribute,
+} from "#/lib/profile-catalogue";
 import { cn } from "#/lib/utils";
 
 export const Route = createFileRoute("/oauth/consent")({
@@ -173,11 +177,6 @@ function ConsentPage() {
 	const hasRequestedAttributes = (preview?.requestedKeys.length ?? 0) > 0;
 	const consentBlocked = loading || !!error || editingKey !== null;
 
-	const requestMessage = messages.consent.wantsAccess.replace(
-		"{client}",
-		clientName,
-	);
-
 	return (
 		<div className="mx-auto grid w-full max-w-lg gap-6 px-4">
 			<header className="flex flex-col items-center gap-3 text-center">
@@ -187,23 +186,29 @@ function ConsentPage() {
 						alt=""
 						className="size-14 rounded-full object-contain"
 					/>
-				) : (
+				) : preview ? (
 					<div className="flex size-14 items-center justify-center rounded-full bg-lagoon text-xl font-bold text-foam">
-						{(clientName || "?").charAt(0).toUpperCase()}
+						{clientName.charAt(0).toUpperCase()}
 					</div>
-				)}
+				) : null}
 				<div>
 					<h1 className="font-display text-2xl font-bold text-sea-ink">
 						{clientName || messages.consent.title}
 					</h1>
-					<p className="mt-1 text-sm text-sea-ink-soft">{requestMessage}</p>
+					{preview ? (
+						<p className="mt-1 text-sm text-sea-ink-soft">
+							{messages.consent.wantsAccess.replace("{client}", clientName)}
+						</p>
+					) : null}
 				</div>
 			</header>
 
 			{loading ? (
-				<p className="text-center text-sm text-sea-ink-soft">
+				<output
+					className="text-center text-sm text-sea-ink-soft"
+				>
 					{messages.consent.loading}
-				</p>
+				</output>
 			) : error ? (
 				<div
 					role="alert"
@@ -215,7 +220,9 @@ function ConsentPage() {
 			) : preview ? (
 				<>
 					{hasRequestedAttributes ? (
-						<section className="grid gap-3 rounded-2xl border border-line bg-bg-surface p-5">
+						<section
+							className="grid gap-3 rounded-2xl border border-line bg-bg-surface p-5"
+						>
 							<div>
 								<h2
 									id="requested-heading"
@@ -229,7 +236,7 @@ function ConsentPage() {
 							</div>
 
 							<fieldset className="grid gap-2">
-								<legend className="sr-only">
+								<legend className="text-sm font-semibold text-sea-ink">
 									{messages.consent.sourceHeading}
 								</legend>
 								<SourceOption
@@ -246,13 +253,25 @@ function ConsentPage() {
 										name={sourceGroupId}
 										value={profile.id}
 										label={profile.name}
-										hint={profile.type}
+										hint={messages.consent.contextProfileHint.replace(
+											"{type}",
+											PROFILE_TYPE_LABELS[profile.type],
+										)}
 										suggested={profile.id === preview.suggestedProfileId}
 										checked={selectedProfileId === profile.id}
 										onSelect={() => setSelectedProfileId(profile.id)}
 									/>
 								))}
 							</fieldset>
+
+							<div>
+								<h3 className="text-sm font-semibold text-sea-ink">
+									{messages.consent.attributesHeading}
+								</h3>
+								<p className="mt-0.5 text-sm text-sea-ink-soft">
+									{messages.consent.requestedEditableHint}
+								</p>
+							</div>
 
 							<ul className="grid gap-1">
 								{displayAttributes.map((attr) => (
@@ -271,17 +290,26 @@ function ConsentPage() {
 							</ul>
 						</section>
 					) : (
-						<div className="rounded-2xl border border-line bg-bg-surface p-5">
+						<section
+							className="grid gap-1 rounded-2xl border border-line bg-bg-surface p-5"
+						>
 							<h2 className="font-display text-lg font-bold text-sea-ink">
 								{messages.consent.noAttributesTitle}
 							</h2>
 							<p className="mt-1 text-sm text-sea-ink-soft">
 								{messages.consent.noAttributesBody}
 							</p>
-						</div>
+						</section>
 					)}
 
 					<div className="flex items-center justify-end gap-3">
+						<output className="sr-only">
+							{pendingDecision === "approve"
+								? messages.consent.allowing
+								: pendingDecision === "reject"
+									? messages.consent.rejecting
+									: ""}
+						</output>
 						<button
 							type="button"
 							onClick={() => void handleDecision("reject")}
@@ -386,6 +414,8 @@ function AttributeRow({
 }) {
 	const field = ATTRIBUTE_FIELDS[attribute.key];
 	const inputId = useId();
+	const errorId = `${inputId}-error`;
+	const invalid = editing && !!editError;
 	const empty = attribute.value.trim() === "";
 
 	if (editing) {
@@ -407,7 +437,11 @@ function AttributeRow({
 						onChange={onDraftChange}
 					/>
 					{editError ? (
-						<p role="alert" className="text-xs font-semibold text-destructive">
+						<p
+							id={errorId}
+							role="alert"
+							className="text-xs font-semibold text-destructive"
+						>
 							{editError}
 						</p>
 					) : null}
