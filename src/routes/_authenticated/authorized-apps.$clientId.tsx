@@ -9,6 +9,7 @@ import {
 } from "#/lib/authorized-apps.functions";
 import { formatDateTime } from "#/lib/format-date";
 import { messages } from "#/lib/i18n";
+import { getLabelText } from "#/lib/permission-label";
 import { ATTRIBUTE_LABELS } from "#/lib/profile-catalogue";
 
 function isNotFound(err: unknown): boolean {
@@ -36,8 +37,20 @@ export const Route = createFileRoute(
 			throw err;
 		}
 	},
+	pendingComponent: AuthorizedAppDetailPending,
 	component: AuthorizedAppDetailPage,
 });
+
+function AuthorizedAppDetailPending() {
+	return (
+		<div className="mx-auto grid w-full max-w-3xl gap-8 px-4 sm:gap-10">
+			<BackLink />
+			<output className="rounded-2xl border border-line bg-bg-surface p-6 text-sm text-sea-ink-soft">
+				{messages.authorizedApps.loading}
+			</output>
+		</div>
+	);
+}
 
 function AuthorizedAppDetailPage() {
 	const data = Route.useLoaderData();
@@ -131,7 +144,7 @@ function AuthorizedAppDetail({
 						{displayName.charAt(0).toUpperCase()}
 					</span>
 					<div className="min-w-0">
-						<h1 className="font-display text-3xl font-bold text-sea-ink sm:text-4xl">
+						<h1 className="break-words font-display text-3xl font-bold text-sea-ink sm:text-4xl">
 							{displayName}
 						</h1>
 						<p className="text-sm text-sea-ink-soft">{latestGrantLabel}</p>
@@ -164,9 +177,9 @@ function AuthorizedAppDetail({
 						{authorizedApp.scopes.map((scope) => (
 							<li
 								key={scope}
-								className="rounded-full border border-line bg-bg-surface px-2.5 py-0.5 text-xs font-semibold text-sea-ink"
+								className="max-w-full break-all rounded-full border border-line bg-bg-surface px-2.5 py-0.5 text-xs font-semibold text-sea-ink"
 							>
-								{scope}
+								{getLabelText(scope)}
 							</li>
 						))}
 					</ul>

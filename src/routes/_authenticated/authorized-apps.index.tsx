@@ -4,26 +4,45 @@ import { Link2 } from "lucide-react";
 import { listAuthorizedApps } from "#/lib/authorized-apps.functions";
 import { formatDateTime } from "#/lib/format-date";
 import { messages } from "#/lib/i18n";
+import { getLabelText } from "#/lib/permission-label";
 import { ATTRIBUTE_LABELS } from "#/lib/profile-catalogue";
 
 export const Route = createFileRoute("/_authenticated/authorized-apps/")({
 	loader: async () => ({ authorizedApps: await listAuthorizedApps() }),
+	pendingComponent: AuthorizedAppsPending,
 	component: AuthorizedAppsIndex,
 });
+
+function AuthorizedAppsHeader() {
+	return (
+		<header className="grid gap-3">
+			<h1 className="font-display text-4xl font-bold tracking-tight text-sea-ink sm:text-5xl">
+				{messages.authorizedApps.title}
+			</h1>
+			<p className="max-w-3xl text-base leading-relaxed text-sea-ink-soft sm:text-lg">
+				{messages.authorizedApps.pageText}
+			</p>
+		</header>
+	);
+}
+
+function AuthorizedAppsPending() {
+	return (
+		<div className="mx-auto grid w-full max-w-5xl gap-8 px-4 sm:gap-12">
+			<AuthorizedAppsHeader />
+			<output className="rounded-2xl border border-line bg-bg-surface p-6 text-sm text-sea-ink-soft">
+				{messages.authorizedApps.loading}
+			</output>
+		</div>
+	);
+}
 
 function AuthorizedAppsIndex() {
 	const { authorizedApps } = Route.useLoaderData();
 
 	return (
 		<div className="mx-auto grid w-full max-w-5xl gap-8 px-4 sm:gap-12">
-			<header className="grid gap-3">
-				<h1 className="font-display text-4xl font-bold tracking-tight text-sea-ink sm:text-5xl">
-					{messages.authorizedApps.title}
-				</h1>
-				<p className="max-w-3xl text-base leading-relaxed text-sea-ink-soft sm:text-lg">
-					{messages.authorizedApps.pageText}
-				</p>
-			</header>
+			<AuthorizedAppsHeader />
 			{authorizedApps.length === 0 ? (
 				<EmptyState />
 			) : (
@@ -103,9 +122,9 @@ function AuthorizedAppRow({
 							{authorizedApp.scopes.map((scope) => (
 								<li
 									key={scope}
-									className="rounded-full border border-line bg-bg-base px-2.5 py-0.5 text-xs font-semibold text-sea-ink"
+									className="max-w-full break-all rounded-full border border-line bg-bg-base px-2.5 py-0.5 text-xs font-semibold text-sea-ink"
 								>
-									{scope}
+									{getLabelText(scope)}
 								</li>
 							))}
 						</ul>

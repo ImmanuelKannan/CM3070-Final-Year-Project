@@ -19,6 +19,7 @@ import type {
 import { getConsentHistory } from "#/lib/consent-history.functions";
 import { formatDateTime } from "#/lib/format-date";
 import { messages } from "#/lib/i18n";
+import { getLabelText } from "#/lib/permission-label";
 import { ATTRIBUTE_LABELS } from "#/lib/profile-catalogue";
 
 type ConsentHistoryEventConfig = {
@@ -369,7 +370,7 @@ function EventDetails({
 								key={scope}
 								className="max-w-full break-all rounded-full border border-line bg-bg-base px-2.5 py-1 text-xs font-semibold text-sea-ink"
 							>
-								{scope}
+								{getLabelText(scope)}
 							</li>
 						))}
 					</ul>

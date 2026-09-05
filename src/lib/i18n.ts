@@ -11,7 +11,7 @@ export const messages = {
 		home: "Home",
 		dashboard: "Dashboard",
 		profiles: "Profiles",
-		history: "History",
+		history: "Consent history",
 		connectedApps: "Connected Apps",
 		developer: "Developer",
 		signIn: "Sign in",
@@ -188,9 +188,10 @@ export const messages = {
 			"This app isn't authorized for your account, or its access was already revoked.",
 		backToList: "Back to connected apps",
 		detailAppClientLabel: "App identifier",
+		loading: "Loading your connected apps…",
 	},
 	history: {
-		title: "History",
+		title: "Consent history",
 		pageText:
 			"Review the apps that have requested access to your identity and what you chose to share.",
 		summaryHeading: "Decision summary",
