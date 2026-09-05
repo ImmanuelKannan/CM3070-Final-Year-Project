@@ -7,7 +7,7 @@ import {
 	useRef,
 	useState,
 } from "react";
-
+import { messages } from "#/lib/i18n";
 import {
 	emergencyGroupErrors,
 	type FieldDef,
@@ -98,7 +98,7 @@ export function ProfileField({
 			const message =
 				saveErr instanceof Error && saveErr.message.trim() !== ""
 					? saveErr.message
-					: "Save failed";
+					: messages.profiles.fieldError;
 			setError(message);
 			setStatus("error");
 		}
@@ -216,6 +216,15 @@ export function ProfileField({
 					)}
 				>
 					{statusNode}
+					{status === "saving" ? (
+						<span className="sr-only">{messages.profiles.fieldSaving}</span>
+					) : null}
+					{status === "saved" ? (
+						<span className="sr-only">{messages.profiles.fieldSaved}</span>
+					) : null}
+					{status === "error" ? (
+						<span className="sr-only">{messages.profiles.fieldError}</span>
+					) : null}
 				</span>
 			</div>
 

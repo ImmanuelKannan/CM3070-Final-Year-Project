@@ -26,21 +26,27 @@ export function ContextProfileCard({ profile, onEdit, onDelete }: Props) {
 	const typeLabel = PROFILE_TYPE_LABELS[profile.type] ?? profile.type;
 
 	return (
-		<article className="group relative flex flex-col gap-2 rounded-2xl border border-line bg-bg-surface p-5 transition-colors hover:border-lagoon/40">
-			<div className="absolute right-3 top-3 flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+		<article className="relative flex flex-col gap-2 rounded-2xl border border-line bg-bg-surface p-5 transition-colors hover:border-lagoon/40">
+			<div className="absolute right-3 top-3 flex gap-1 opacity-100">
 				<button
 					type="button"
 					onClick={() => onEdit(profile)}
-					aria-label={messages.profiles.editAttributes}
-					className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sea-ink-soft transition-colors hover:bg-lagoon/10 hover:text-lagoon-deep focus-visible:opacity-100 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+					aria-label={messages.profiles.editContextualProfile.replace(
+						"{name}",
+						profile.name,
+					)}
+					className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sea-ink-soft transition-colors hover:bg-lagoon/10 hover:text-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 				>
 					<Pencil aria-hidden="true" className="h-3.5 w-3.5" />
 				</button>
 				<button
 					type="button"
 					onClick={() => onDelete(profile)}
-					aria-label={messages.profiles.deleteProfile}
-					className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sea-ink-soft transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:opacity-100 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+					aria-label={messages.profiles.deleteContextualProfile.replace(
+						"{name}",
+						profile.name,
+					)}
+					className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sea-ink-soft transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 				>
 					<Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
 				</button>

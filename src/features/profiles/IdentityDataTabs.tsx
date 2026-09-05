@@ -77,7 +77,6 @@ export function IdentityDataTabs({
 								role="tab"
 								id={`${tablistId}-tab-${tab}`}
 								aria-selected={isActive}
-								aria-controls={`${tablistId}-panel-${tab}`}
 								tabIndex={isActive ? 0 : -1}
 								onClick={() => onTabChange(tab)}
 								className={cn(

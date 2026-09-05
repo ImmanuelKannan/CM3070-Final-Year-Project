@@ -29,6 +29,8 @@ export const Route = createFileRoute("/_authenticated/profiles")({
 		]);
 		return { identity, profiles };
 	},
+	pendingComponent: ProfilesPending,
+	errorComponent: ProfilesError,
 	component: Profiles,
 });
 
@@ -45,6 +47,47 @@ function setErrorMessage(err: unknown, fallback: string): string {
 		if (typeof message === "string" && message.trim() !== "") return message;
 	}
 	return fallback;
+}
+
+function ProfilesHeader() {
+	return (
+		<header className="grid gap-3">
+			<h1 className="font-display text-4xl font-bold tracking-tight text-sea-ink sm:text-5xl">
+				{messages.profiles.title}
+			</h1>
+			<p className="max-w-3xl text-base leading-relaxed text-sea-ink-soft sm:text-lg">
+				{messages.profiles.pageLede}
+			</p>
+		</header>
+	);
+}
+
+function ProfilesPending() {
+	return (
+		<div className="mx-auto grid w-full max-w-5xl gap-8 px-4 sm:gap-12">
+			<ProfilesHeader />
+			<output className="rounded-2xl border border-line bg-bg-surface p-6 text-sm text-sea-ink-soft">
+				{messages.profiles.loading}
+			</output>
+		</div>
+	);
+}
+
+function ProfilesError() {
+	return (
+		<div className="mx-auto grid w-full max-w-5xl gap-8 px-4 sm:gap-12">
+			<ProfilesHeader />
+			<section
+				role="alert"
+				className="grid gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-destructive"
+			>
+				<h2 className="font-display text-xl font-bold">
+					{messages.profiles.errorHeading}
+				</h2>
+				<p className="text-sm">{messages.profiles.errorBody}</p>
+			</section>
+		</div>
+	);
 }
 
 function Profiles() {
@@ -67,7 +110,6 @@ function Profiles() {
 	const [deleteError, setDeleteError] = useState<string | null>(null);
 
 	const identityHeadingId = useId();
-	const contextHeadingId = useId();
 
 	const getProfileServerFn = useServerFn(getProfileFn);
 	const createProfileServerFn = useServerFn(createProfileFn);
@@ -186,7 +228,7 @@ function Profiles() {
 		async (profile: ProfileSummary) => {
 			setDeleteError(null);
 			const confirmed = window.confirm(
-				`Delete "${profile.name}"? This can't be undone.`,
+				messages.profiles.deleteConfirmPrompt.replace("{name}", profile.name),
 			);
 			if (!confirmed) return;
 			try {
@@ -232,7 +274,7 @@ function Profiles() {
 						{messages.profiles.identityHeading}
 					</h2>
 					<p className="mt-1 text-sm text-sea-ink-soft">
-						{messages.profiles.identityLede}
+						{messages.profiles.identityText}
 					</p>
 				</div>
 				<IdentityDataTabs
@@ -248,10 +290,7 @@ function Profiles() {
 				/>
 			</section>
 
-			<section
-				className="grid gap-4 border-t border-line pt-6 sm:pt-10"
-				aria-labelledby={contextHeadingId}
-			>
+			<div className="grid gap-4 border-t border-line pt-6 sm:pt-10">
 				{deleteError ? (
 					<div
 						role="alert"
@@ -273,7 +312,7 @@ function Profiles() {
 						void handleDeleteProfile(profile);
 					}}
 				/>
-			</section>
+			</div>
 
 			<AddProfileModal
 				open={addModalOpen}
