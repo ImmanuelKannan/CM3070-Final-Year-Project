@@ -16,6 +16,7 @@ import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as DotwellKnownOauthAuthorizationServerRouteImport } from './routes/[.]well-known/oauth-authorization-server'
 import { Route as DotwellKnownOpenidConfigurationRouteImport } from './routes/[.]well-known/openid-configuration'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
 import { Route as ApiProfilePictureRouteImport } from './routes/api/profile-picture'
 import { Route as OauthConsentRouteImport } from './routes/oauth/consent'
@@ -59,6 +60,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedProfilesRoute = AuthenticatedProfilesRouteImport.update({
   id: '/profiles',
   path: '/profiles',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/.well-known/openid-configuration': typeof DotwellKnownOpenidConfigurationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/history': typeof AuthenticatedHistoryRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/api/profile-picture': typeof ApiProfilePictureRoute
   '/oauth/consent': typeof OauthConsentRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/.well-known/openid-configuration': typeof DotwellKnownOpenidConfigurationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/history': typeof AuthenticatedHistoryRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/api/profile-picture': typeof ApiProfilePictureRoute
   '/oauth/consent': typeof OauthConsentRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/.well-known/openid-configuration': typeof DotwellKnownOpenidConfigurationRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/profiles': typeof AuthenticatedProfilesRoute
   '/api/profile-picture': typeof ApiProfilePictureRoute
   '/oauth/consent': typeof OauthConsentRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-authorization-server'
     | '/.well-known/openid-configuration'
     | '/dashboard'
+    | '/history'
     | '/profiles'
     | '/api/profile-picture'
     | '/oauth/consent'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-authorization-server'
     | '/.well-known/openid-configuration'
     | '/dashboard'
+    | '/history'
     | '/profiles'
     | '/api/profile-picture'
     | '/oauth/consent'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-authorization-server'
     | '/.well-known/openid-configuration'
     | '/_authenticated/dashboard'
+    | '/_authenticated/history'
     | '/_authenticated/profiles'
     | '/api/profile-picture'
     | '/oauth/consent'
@@ -245,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/profiles': {
       id: '/_authenticated/profiles'
       path: '/profiles'
@@ -292,6 +311,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedProfilesRoute: typeof AuthenticatedProfilesRoute
   AuthenticatedAuthorizedAppsClientIdRoute: typeof AuthenticatedAuthorizedAppsClientIdRoute
   AuthenticatedAuthorizedAppsIndexRoute: typeof AuthenticatedAuthorizedAppsIndexRoute
@@ -299,6 +319,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedProfilesRoute: AuthenticatedProfilesRoute,
   AuthenticatedAuthorizedAppsClientIdRoute:
     AuthenticatedAuthorizedAppsClientIdRoute,
@@ -324,3 +345,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

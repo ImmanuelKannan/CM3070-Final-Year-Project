@@ -111,12 +111,14 @@ export async function revokeAuthorizedAPp(
 			eq(consentGrants.userId, userId),
 			eq(consentGrants.clientId, clientId),
 		);
-		const activeGrants = await tx
-			.select({ id: consentGrants.id })
-			.from(consentGrants)
-			.where(and(approvalKey, isNull(consentGrants.revokedAt)));
+		const revokedAt = new Date();
+		const revokedGrants = await tx
+			.update(consentGrants)
+			.set({ revokedAt })
+			.where(and(approvalKey, isNull(consentGrants.revokedAt)))
+			.returning({ scopes: consentGrants.scopes });
 
-		if (activeGrants.length === 0) {
+		if (revokedGrants.length === 0) {
 			const [existingRevocation] = await tx
 				.select({ id: consentRevocations.id })
 				.from(consentRevocations)
@@ -132,13 +134,6 @@ export async function revokeAuthorizedAPp(
 				message: "No active authorization for this application",
 			});
 		}
-
-		const revokedAt = new Date();
-
-		await tx
-			.update(consentGrants)
-			.set({ revokedAt })
-			.where(and(approvalKey, isNull(consentGrants.revokedAt)));
 		await tx
 			.delete(oauthConsent)
 			.where(
@@ -165,9 +160,16 @@ export async function revokeAuthorizedAPp(
 					eq(oauthAccessToken.clientId, clientId),
 				),
 			);
+		const [client] = await tx
+			.select({ name: oauthClient.name })
+			.from(oauthClient)
+			.where(eq(oauthClient.clientId, clientId))
+			.limit(1);
 		await tx.insert(consentRevocations).values({
 			userId,
 			clientId,
+			clientName: client?.name?.trim() || clientId,
+			scopes: normalizeScopes(revokedGrants.flatMap((grant) => grant.scopes)),
 			createdAt: revokedAt,
 		});
 

@@ -7,6 +7,12 @@ import { db } from "#/db";
 import { oauthClient } from "#/db/schema";
 import { getUserIdFromRequest } from "#/lib/auth.server";
 import {
+	validateOauthQuery,
+	generateQUeryHash,
+	normalizeAuthorizationQuery,
+} from "#/lib/consent-grants";
+import { saveConsentRequest } from "#/lib/consent-history";
+import {
 	getRequestedIdentityAttributeKeys,
 	type PreviewAttribute,
 	resolveConsentPreviewAttributes,
@@ -69,6 +75,7 @@ export const getConsentPreview = createServerFn({ method: "POST" })
 	})
 	.handler(async ({ data }): Promise<ConsentPreviewResult> => {
 		const userId = await getUserIdFromRequest("Sign in to continue");
+		await validateOauthQuery(data.oauthQuery);
 
 		const query = new URLSearchParams(data.oauthQuery);
 		const clientId = query.get("client_id");
@@ -127,6 +134,17 @@ export const getConsentPreview = createServerFn({ method: "POST" })
 			profileOverrides,
 			requestedKeys,
 		);
+		const normalizedQuery = normalizeAuthorizationQuery(
+			data.oauthQuery,
+			scopes,
+		);
+		const referenceId = generateQUeryHash(userId, normalizedQuery);
+		await saveConsentRequest(userId, {
+			referenceId,
+			clientId: client.clientId,
+			clientName: client.name ?? client.clientId,
+			scopes,
+		});
 
 		return {
 			client: {

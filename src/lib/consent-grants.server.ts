@@ -14,9 +14,10 @@ import {
 import { auth } from "#/lib/auth";
 import { getSessionFromRequest } from "#/lib/auth.server";
 import {
+	validateOauthQuery,
 	type ConsentDecision,
 	type ConsentGrantSource,
-	generateStableQueryHash,
+	generateQUeryHash,
 	normalizeAuthorizationQuery,
 	normalizeScopes,
 } from "#/lib/consent-grants";
@@ -98,6 +99,7 @@ export async function approveConsentGrant(
 	session: ApproveConsentGrantSession,
 	headers: Headers,
 ): Promise<ConsentDecisionResult> {
+	await validateOauthQuery(data.oauthQuery);
 	const userId = session.user.id;
 	const query = new URLSearchParams(data.oauthQuery);
 	const clientId = query.get("client_id");
@@ -166,7 +168,7 @@ export async function approveConsentGrant(
 	const snapshot = {
 		clientId,
 		userId,
-		referenceId: generateStableQueryHash(userId, normalizedQuery),
+		referenceId: generateQUeryHash(userId, normalizedQuery),
 		canonicalQuery: normalizedQuery,
 		scopes: normalizeScopes(scopes),
 		source,
@@ -193,6 +195,7 @@ export async function rejectConsentGrant(
 	session: ApproveConsentGrantSession,
 	headers: Headers,
 ): Promise<ConsentDecisionResult> {
+	await validateOauthQuery(data.oauthQuery);
 	const userId = session.user.id;
 	const query = new URLSearchParams(data.oauthQuery);
 	const clientId = query.get("client_id");
@@ -218,7 +221,7 @@ export async function rejectConsentGrant(
 		decision: "rejected",
 		userId,
 		clientId,
-		referenceId: generateStableQueryHash(userId, normalizedQuery),
+		referenceId: generateQUeryHash(userId, normalizedQuery),
 		canonicalQuery: normalizedQuery,
 		canonicalScopes: normalizeScopes(scopes),
 		snapshot: null,

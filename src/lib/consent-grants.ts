@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { getOAuthProviderState } from "@better-auth/oauth-provider";
 import { APIError } from "better-auth/api";
+import { constantTimeEqual, makeSignature } from "better-auth/crypto";
 import { z } from "zod";
 
 export const IGNORED_BETTER_AUTH_QUERY_KEYS = [
@@ -55,13 +56,56 @@ export function normalizeAuthorizationQuery(
 	return params.toString();
 }
 
-export function generateStableQueryHash(
+export function generateQUeryHash(
 	userId: string,
 	normalizedQueryString: string,
 ): string {
 	return createHash("sha256")
 		.update(`${userId}\u0000${normalizedQueryString}`)
 		.digest("hex");
+}
+
+export async function verifyOAuthQuery(
+	oauthQuery: string,
+	secret = process.env.BETTER_AUTH_SECRET,
+): Promise<boolean> {
+	if (!secret) return false;
+
+	const params = new URLSearchParams(oauthQuery);
+	const signatures = params.getAll("sig");
+	const signature = signatures[0];
+	const expiresAt = Number(params.get("exp"));
+	params.delete("sig");
+
+	const queryParams = [...params.entries()].sort(
+		([keyA, valueA], [keyB, valueB]) => {
+			if (keyA !== keyB) return keyA < keyB ? -1 : 1;
+			if (valueA === valueB) return 0;
+			return valueA < valueB ? -1 : 1;
+		},
+	);
+	const expectedSignature = await makeSignature(
+		new URLSearchParams(queryParams).toString(),
+		secret,
+	);
+
+	return (
+		signatures.length === 1 &&
+		!!signature &&
+		Number.isFinite(expiresAt) &&
+		expiresAt * 1000 >= Date.now() &&
+		constantTimeEqual(signature, expectedSignature)
+	);
+}
+
+export async function validateOauthQuery(
+	oauthQuery: string,
+): Promise<void> {
+	if (!(await verifyOAuthQuery(oauthQuery))) {
+		throw new APIError("BAD_REQUEST", {
+			message: "Authorization request is invalid or expired",
+		});
+	}
 }
 
 export async function resolveOAuthProviderConsentReference(
@@ -74,7 +118,7 @@ export async function resolveOAuthProviderConsentReference(
 			message: "OAuth provider state query is missing",
 		});
 	}
-	return generateStableQueryHash(
+	return generateQUeryHash(
 		userId,
 		normalizeAuthorizationQuery(state.query, scopes),
 	);

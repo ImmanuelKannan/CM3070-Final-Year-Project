@@ -3,10 +3,7 @@ import { APIError } from "better-auth/api";
 import { z } from "zod";
 
 import { getUserIdFromRequest } from "#/lib/auth.server";
-import type {
-	AuthorizedApp,
-	RevokeAppResult,
-} from "#/lib/authorized-apps";
+import type { AuthorizedApp, RevokeAppResult } from "#/lib/authorized-apps";
 import {
 	getAuthorizedApp as getAuthorizedAppImpl,
 	listAuthorizedApps as listAuthorizedAppsImpl,

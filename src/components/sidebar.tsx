@@ -7,7 +7,7 @@ import { authClient } from "#/lib/auth-client";
 import { messages } from "#/lib/i18n";
 
 type ActiveNavItem = {
-	to: "/profiles" | "/authorized-apps";
+	to: "/profiles" | "/history" | "/authorized-apps";
 	label: string;
 	icon: LucideIcon;
 	disabled: false;
@@ -30,10 +30,10 @@ const NAV_ITEMS: readonly SidebarItem[] = [
 		disabled: false,
 	},
 	{
+		to: "/history",
 		label: messages.nav.history,
 		icon: ClipboardList,
-		disabled: true,
-		comingSoon: messages.nav.comingSoon,
+		disabled: false,
 	},
 	{
 		to: "/authorized-apps",
@@ -130,11 +130,11 @@ function SidebarNav() {
 	return (
 		<nav
 			aria-label={messages.nav.appNavLabel}
-			className="flex flex-row flex-wrap items-center gap-1 md:flex-1 md:flex-col md:items-stretch md:gap-0 md:overflow-y-auto md:px-3 md:py-4"
+			className="w-full md:flex md:flex-1 md:flex-col md:items-stretch md:overflow-y-auto md:px-3 md:py-4"
 		>
-			<ul className="flex flex-row flex-wrap items-center gap-1 md:flex-col md:items-stretch md:gap-1">
+			<ul className="grid w-full grid-cols-2 gap-1 md:flex md:flex-col md:items-stretch">
 				{NAV_ITEMS.map((item) => (
-					<li key={item.label} className="md:w-full">
+					<li key={item.label} className="min-w-0 md:w-full">
 						<SidebarNavLink item={item} />
 					</li>
 				))}
@@ -156,7 +156,7 @@ function SidebarNavLink({ item }: { item: SidebarItem }) {
 					<Icon className="size-4" aria-hidden="true" />
 					{item.label}
 				</span>
-				<span className="rounded-full border border-line bg-bg-base px-2 py-0.5 text-xs font-semibold text-sea-ink-soft">
+				<span className="hidden rounded-full border border-line bg-bg-base px-2 py-0.5 text-xs font-semibold text-sea-ink-soft sm:inline">
 					{item.comingSoon}
 				</span>
 			</span>
