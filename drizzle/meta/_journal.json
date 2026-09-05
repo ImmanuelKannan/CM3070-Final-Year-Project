@@ -57,6 +57,13 @@
       "when": 1788409405933,
       "tag": "0007_skinny_greymalkin",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788587791476,
+      "tag": "0008_broad_killraven",
+      "breakpoints": true
     }
   ]
 }

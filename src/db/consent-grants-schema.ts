@@ -26,7 +26,7 @@ export const consentGrants = pgTable(
 		referenceId: text("reference_id").notNull(),
 		clientId: text("client_id")
 			.notNull()
-			.references(() => oauthClient.clientId, { onDelete: "cascade" }),
+			.references(() => oauthClient.clientId, { onDelete: "restrict" }),
 		canonicalQuery: text("canonical_query").notNull(),
 		scopes: jsonb("scopes").$type<string[]>().notNull(),
 		source: jsonb("source").$type<ConsentGrantSource>().notNull(),
@@ -48,6 +48,35 @@ export const consentGrants = pgTable(
 	],
 );
 
+export const consentRequests = pgTable(
+	"consent_requests",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		referenceId: text("reference_id").notNull(),
+		clientId: text("client_id")
+			.notNull()
+			.references(() => oauthClient.clientId, { onDelete: "restrict" }),
+		clientName: text("client_name").notNull(),
+		scopes: jsonb("scopes").$type<string[]>().notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => [
+		uniqueIndex("consent_requests_user_reference_idx").on(
+			table.userId,
+			table.referenceId,
+		),
+		index("consent_requests_user_created_at_idx").on(
+			table.userId,
+			table.createdAt,
+		),
+	],
+);
+
 export const consentRevocations = pgTable(
 	"consent_revocations",
 	{
@@ -57,7 +86,9 @@ export const consentRevocations = pgTable(
 			.references(() => user.id, { onDelete: "cascade" }),
 		clientId: text("client_id")
 			.notNull()
-			.references(() => oauthClient.clientId, { onDelete: "cascade" }),
+			.references(() => oauthClient.clientId, { onDelete: "restrict" }),
+		clientName: text("client_name").notNull(),
+		scopes: jsonb("scopes").$type<string[]>().notNull(),
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
 			.defaultNow(),
@@ -78,7 +109,7 @@ export const consentDecisions = pgTable(
 		referenceId: text("reference_id").notNull(),
 		clientId: text("client_id")
 			.notNull()
-			.references(() => oauthClient.clientId, { onDelete: "cascade" }),
+			.references(() => oauthClient.clientId, { onDelete: "restrict" }),
 		canonicalQuery: text("canonical_query").notNull(),
 		canonicalScopes: jsonb("canonical_scopes").$type<string[]>().notNull(),
 		decision: text("decision").$type<ConsentDecision>().notNull(),
