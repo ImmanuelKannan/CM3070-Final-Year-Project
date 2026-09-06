@@ -14,7 +14,6 @@ import {
 import type { ConsentDecision, ConsentGrantSource } from "#/lib/consent-grants";
 
 import { user } from "./auth-schema.ts";
-import { oauthClient } from "./oauth-schema.ts";
 
 export const consentGrants = pgTable(
 	"consent_grants",
@@ -24,9 +23,7 @@ export const consentGrants = pgTable(
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 		referenceId: text("reference_id").notNull(),
-		clientId: text("client_id")
-			.notNull()
-			.references(() => oauthClient.clientId, { onDelete: "restrict" }),
+		clientId: text("client_id").notNull(),
 		canonicalQuery: text("canonical_query").notNull(),
 		scopes: jsonb("scopes").$type<string[]>().notNull(),
 		source: jsonb("source").$type<ConsentGrantSource>().notNull(),
@@ -56,9 +53,7 @@ export const consentRequests = pgTable(
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 		referenceId: text("reference_id").notNull(),
-		clientId: text("client_id")
-			.notNull()
-			.references(() => oauthClient.clientId, { onDelete: "restrict" }),
+		clientId: text("client_id").notNull(),
 		clientName: text("client_name").notNull(),
 		scopes: jsonb("scopes").$type<string[]>().notNull(),
 		createdAt: timestamp("created_at", { withTimezone: true })
@@ -84,9 +79,7 @@ export const consentRevocations = pgTable(
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
-		clientId: text("client_id")
-			.notNull()
-			.references(() => oauthClient.clientId, { onDelete: "restrict" }),
+		clientId: text("client_id").notNull(),
 		clientName: text("client_name").notNull(),
 		scopes: jsonb("scopes").$type<string[]>().notNull(),
 		createdAt: timestamp("created_at", { withTimezone: true })
@@ -107,9 +100,7 @@ export const consentDecisions = pgTable(
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 		referenceId: text("reference_id").notNull(),
-		clientId: text("client_id")
-			.notNull()
-			.references(() => oauthClient.clientId, { onDelete: "restrict" }),
+		clientId: text("client_id").notNull(),
 		canonicalQuery: text("canonical_query").notNull(),
 		canonicalScopes: jsonb("canonical_scopes").$type<string[]>().notNull(),
 		decision: text("decision").$type<ConsentDecision>().notNull(),
