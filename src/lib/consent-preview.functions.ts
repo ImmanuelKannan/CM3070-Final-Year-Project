@@ -7,9 +7,9 @@ import { db } from "#/db";
 import { oauthClient } from "#/db/schema";
 import { getUserIdFromRequest } from "#/lib/auth.server";
 import {
-	validateOauthQuery,
 	generateQUeryHash,
 	normalizeAuthorizationQuery,
+	validateOauthQuery,
 } from "#/lib/consent-grants";
 import { saveConsentRequest } from "#/lib/consent-history";
 import {
@@ -53,10 +53,19 @@ export type ConsentPreviewResult = {
 	attributes: PreviewAttribute[];
 };
 
-function getProfileType(
-	metadata: Record<string, unknown> | null,
-): ProfileType | null {
-	const value = metadata?.profileType;
+function getProfileType(metadata: unknown): ProfileType | null {
+	let parsedMetadata = metadata;
+	if (typeof metadata === "string") {
+		try {
+			parsedMetadata = JSON.parse(metadata);
+		} catch {
+			return null;
+		}
+	}
+
+	if (!parsedMetadata || typeof parsedMetadata !== "object") return null;
+
+	const value = (parsedMetadata as Record<string, unknown>).profileType;
 	return typeof value === "string" &&
 		(PROFILE_TYPES as readonly string[]).includes(value)
 		? (value as ProfileType)

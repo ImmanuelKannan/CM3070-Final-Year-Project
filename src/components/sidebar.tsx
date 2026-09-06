@@ -6,46 +6,32 @@ import { useState } from "react";
 import { authClient } from "#/lib/auth-client";
 import { messages } from "#/lib/i18n";
 
-type ActiveNavItem = {
-	to: "/profiles" | "/history" | "/authorized-apps";
+type NavItem = {
+	to: "/profiles" | "/history" | "/authorized-apps" | "/developer";
 	label: string;
 	icon: LucideIcon;
-	disabled: false;
 };
 
-type DisabledNavItem = {
-	label: string;
-	icon: LucideIcon;
-	disabled: true;
-	comingSoon: string;
-};
-
-type SidebarItem = ActiveNavItem | DisabledNavItem;
-
-const NAV_ITEMS: readonly SidebarItem[] = [
+const NAV_ITEMS: readonly NavItem[] = [
 	{
 		to: "/profiles",
 		label: messages.nav.profiles,
 		icon: Users,
-		disabled: false,
 	},
 	{
 		to: "/history",
 		label: messages.nav.history,
 		icon: ClipboardList,
-		disabled: false,
 	},
 	{
 		to: "/authorized-apps",
 		label: messages.nav.connectedApps,
 		icon: Link2,
-		disabled: false,
 	},
 	{
+		to: "/developer",
 		label: messages.nav.developer,
 		icon: Code2,
-		disabled: true,
-		comingSoon: messages.nav.comingSoon,
 	},
 ] as const;
 
@@ -143,26 +129,7 @@ function SidebarNav() {
 	);
 }
 
-function SidebarNavLink({ item }: { item: SidebarItem }) {
-	if (item.disabled) {
-		const Icon = item.icon;
-		return (
-			<span
-				aria-disabled="true"
-				className="flex w-full cursor-not-allowed items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-sea-ink-soft opacity-60 md:py-2.5"
-				title={item.comingSoon}
-			>
-				<span className="flex items-center gap-3">
-					<Icon className="size-4" aria-hidden="true" />
-					{item.label}
-				</span>
-				<span className="hidden rounded-full border border-line bg-bg-base px-2 py-0.5 text-xs font-semibold text-sea-ink-soft sm:inline">
-					{item.comingSoon}
-				</span>
-			</span>
-		);
-	}
-
+function SidebarNavLink({ item }: { item: NavItem }) {
 	const Icon = item.icon;
 	return (
 		<Link

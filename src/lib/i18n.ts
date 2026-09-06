@@ -20,7 +20,6 @@ export const messages = {
 		label: "Primary Nav",
 		appNavLabel: "App navigation",
 		skipToContent: "Skip to content",
-		comingSoon: "Coming soon",
 	},
 	brand: {
 		name: "HeyMe",
@@ -189,6 +188,58 @@ export const messages = {
 		backToList: "Back to connected apps",
 		detailAppClientLabel: "App identifier",
 		loading: "Loading your connected apps…",
+	},
+	developer: {
+		title: "Developer",
+		pageText:
+			"Register OAuth clients that can connect to HeyMe and request access to your identity.",
+		createHeading: "Create an OAuth client",
+		createText: "Use a separate client for each application.",
+		appNameLabel: "App name",
+		appNamePlaceholder: "e.g. My application",
+		appNameRequired: "App name is required.",
+		profileTypeLabel: "Profile type",
+		profileTypePlaceholder: "Select a profile type…",
+		profileTypeRequired: "Select a profile type.",
+		redirectUrisLabel: "Redirect URLs",
+		redirectUrisPlaceholder:
+			"https://example.com/callback\nhttps://example.com/oauth/callback",
+		redirectUrisHint: "Enter one redirect URL per line.",
+		redirectUrisRequired: "At least one redirect URL is required.",
+		createClient: "Create client",
+		creatingClient: "Creating client…",
+		createErrorHeading: "We couldn't create that OAuth client",
+		createErrorBody:
+			"Check the client details and redirect URLs, then try again.",
+		credentialsHeading: "Client created",
+		credentialsText:
+			"Copy these credentials now. The client secret cannot be viewed again after you leave this page.",
+		clientIdLabel: "Client ID",
+		clientSecretLabel: "Client secret",
+		copy: "Copy",
+		copied: "Copied",
+		copyError: "We couldn't copy that value. Copy it manually instead.",
+		listHeading: "Your OAuth clients",
+		listText:
+			"Clients registered for your HeyMe account are shown without secrets.",
+		loading: "Loading your OAuth clients…",
+		listErrorHeading: "We couldn't load your OAuth clients",
+		listErrorBody:
+			"Check your connection and try again. If the problem keeps happening, reload the page.",
+		retry: "Try again",
+		emptyHeading: "No OAuth clients yet",
+		emptyBody: "Create a client above to connect an application to HeyMe.",
+		unnamedClient: "Unnamed client",
+		profileTypeUnknown: "Unknown",
+		redirectUrisHeading: "Redirect URLs",
+		deleteClient: "Delete client",
+		deletingClient: "Deleting…",
+		deleteConfirmTitle: 'Delete the OAuth client "{name}"?',
+		deleteConfirmBody:
+			"This permanently deletes the client and stops it from connecting to HeyMe. This cannot be undone.",
+		deleteErrorHeading: "We couldn't delete that OAuth client",
+		deleteErrorBody:
+			"Check your connection and try again. If the problem keeps happening, reload the page.",
 	},
 	history: {
 		title: "Consent history",
