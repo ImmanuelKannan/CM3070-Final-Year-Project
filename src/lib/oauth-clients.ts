@@ -5,11 +5,7 @@ import { z } from "zod";
 import { auth } from "#/lib/auth";
 import { PROFILE_TYPES, type ProfileType } from "#/lib/profile-catalogue";
 
-const clientNameSchema = z
-	.string()
-	.trim()
-	.min(1)
-	.max(100);
+const clientNameSchema = z.string().trim().min(1).max(100);
 
 const redirectUrisSchema = z
 	.array(z.url("Redirect URL must be a valid URL"))
@@ -59,18 +55,16 @@ export function normalizeCreateOAuthClientInput(
 	const parsedOauthClient = createOAuthClientInputSchema.safeParse(input);
 	if (!parsedOauthClient.success) {
 		throw new APIError("BAD_REQUEST", {
-			message: parsedOauthClient.error.issues[0]?.message ?? "Invalid OAuth client input",
+			message:
+				parsedOauthClient.error.issues[0]?.message ??
+				"Invalid OAuth client input",
 		});
 	}
 	return parsedOauthClient.data;
 }
 
 export function normalizeOAuthClientId(input: unknown): string {
-	const parsed = z
-		.string()
-		.trim()
-		.min(1)
-		.safeParse(input);
+	const parsed = z.string().trim().min(1).safeParse(input);
 	if (!parsed.success) {
 		throw new APIError("BAD_REQUEST", {
 			message: parsed.error.issues[0]?.message ?? "Invalid client id",

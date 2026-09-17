@@ -9,23 +9,21 @@ import { getSession } from "#/lib/auth.functions";
 import { authClient } from "#/lib/auth-client";
 import { messages } from "#/lib/i18n";
 
-export const Route = createFileRoute("/sign-up")({
+export const Route = createFileRoute("/sign-up/developer")({
 	beforeLoad: async () => {
-		if (await getSession()) throw redirect({ to: "/dashboard" });
+		if (await getSession()) throw redirect({ to: "/developer" });
 	},
-	component: SignUp,
+	component: DeveloperSignUp,
 });
 
-function SignUp() {
-	const [firstName, setFirstName] = useState("");
-	const [lastName, setLastName] = useState("");
+function DeveloperSignUp() {
+	const [companyName, setCompanyName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState<string | null>(null);
 	const [isPending, setIsPending] = useState(false);
 
-	const firstNameId = useId();
-	const lastNameId = useId();
+	const companyNameId = useId();
 	const emailId = useId();
 	const passwordId = useId();
 	const errorId = useId();
@@ -39,16 +37,12 @@ function SignUp() {
 		setIsPending(true);
 		setError(null);
 
-		const normalizedFirstName = firstName.trim();
-		const normalizedLastName = lastName.trim();
-
 		try {
 			const { data, error: signUpError } = await authClient.signUp.email({
-				firstName: normalizedFirstName,
-				lastName: normalizedLastName,
-				name: `${normalizedFirstName} ${normalizedLastName}`,
+				name: companyName.trim(),
 				email: email.trim(),
 				password,
+				accountKind: "developer",
 			});
 
 			if (signUpError) {
@@ -62,7 +56,7 @@ function SignUp() {
 			} | null;
 			if (resumed?.redirect && resumed?.url) return;
 
-			window.location.assign("/dashboard");
+			window.location.assign("/developer");
 		} catch {
 			setError(messages.auth.signUp.errorBody);
 		} finally {
@@ -70,16 +64,14 @@ function SignUp() {
 		}
 	}
 
-	const describedBy = error ? errorId : undefined;
-
 	return (
 		<div className="mx-auto grid w-full max-w-md gap-8 px-4">
 			<header className="grid gap-2">
 				<h1 className="font-display text-3xl font-bold tracking-tight text-sea-ink sm:text-4xl">
-					{messages.auth.signUp.title}
+					{messages.auth.signUp.developerTitle}
 				</h1>
 				<p className="text-base leading-relaxed text-sea-ink-soft">
-					{messages.auth.signUp.lede}
+					{messages.auth.signUp.developerDescription}
 				</p>
 			</header>
 
@@ -91,50 +83,29 @@ function SignUp() {
 					<div
 						id={errorId}
 						role="alert"
-						aria-live="assertive"
-						className="grid gap-1 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+						className="grid gap-1 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-destructive"
 					>
 						<p className="font-semibold">{messages.auth.signUp.errorHeading}</p>
 						<p>{error}</p>
 					</div>
 				) : null}
 
-				<div className="grid gap-5 sm:grid-cols-2">
-					<div className="grid gap-1.5">
-						<label htmlFor={firstNameId} className="font-semibold text-sea-ink">
-							{messages.auth.signUp.firstNameLabel}
-						</label>
-						<Input
-							id={firstNameId}
-							name="firstName"
-							type="text"
-							autoComplete="given-name"
-							required
-							maxLength={100}
-							value={firstName}
-							onChange={(event) => setFirstName(event.target.value)}
-							disabled={isPending}
-							aria-describedby={describedBy}
-						/>
-					</div>
-
-					<div className="grid gap-1.5">
-						<label htmlFor={lastNameId} className="font-semibold text-sea-ink">
-							{messages.auth.signUp.lastNameLabel}
-						</label>
-						<Input
-							id={lastNameId}
-							name="lastName"
-							type="text"
-							autoComplete="family-name"
-							required
-							maxLength={100}
-							value={lastName}
-							onChange={(event) => setLastName(event.target.value)}
-							disabled={isPending}
-							aria-describedby={describedBy}
-						/>
-					</div>
+				<div className="grid gap-1.5">
+					<label htmlFor={companyNameId} className="font-semibold text-sea-ink">
+						{messages.auth.signUp.companyNameLabel}
+					</label>
+					<Input
+						id={companyNameId}
+						name="companyName"
+						type="text"
+						autoComplete="organization"
+						required
+						maxLength={100}
+						placeholder={messages.auth.signUp.companyNamePlaceholder}
+						value={companyName}
+						onChange={(event) => setCompanyName(event.target.value)}
+						disabled={isPending}
+					/>
 				</div>
 
 				<div className="grid gap-1.5">
@@ -152,7 +123,6 @@ function SignUp() {
 						value={email}
 						onChange={(event) => setEmail(event.target.value)}
 						disabled={isPending}
-						aria-describedby={describedBy}
 					/>
 				</div>
 
@@ -171,7 +141,6 @@ function SignUp() {
 						value={password}
 						onChange={(event) => setPassword(event.target.value)}
 						disabled={isPending}
-						aria-describedby={describedBy}
 					/>
 					<p className="text-sm text-sea-ink-soft">
 						{messages.auth.signUp.passwordHint}

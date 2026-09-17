@@ -1,4 +1,9 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	redirect,
+	useNavigate,
+} from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -24,6 +29,11 @@ type AuthorizedAppDetail = NonNullable<
 export const Route = createFileRoute(
 	"/_authenticated/authorized-apps/$clientId",
 )({
+	beforeLoad: ({ context }) => {
+		if (context.session.user.accountKind !== "identity_holder") {
+			throw redirect({ to: "/developer" });
+		}
+	},
 	loader: async ({ params }) => {
 		try {
 			const authorizedApp = await getAuthorizedApps({

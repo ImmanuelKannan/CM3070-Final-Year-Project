@@ -26,7 +26,11 @@ import { cn } from "#/lib/utils";
 
 export const Route = createFileRoute("/oauth/consent")({
 	beforeLoad: async () => {
-		if (!(await getSession())) throw redirect({ to: "/sign-in" });
+		const session = await getSession();
+		if (!session) throw redirect({ to: "/sign-in" });
+		if (session.user.accountKind !== "identity_holder") {
+			throw redirect({ to: "/developer" });
+		}
 	},
 	validateSearch: () => ({}),
 	component: ConsentPage,
@@ -204,9 +208,7 @@ function ConsentPage() {
 			</header>
 
 			{loading ? (
-				<output
-					className="text-center text-sm text-sea-ink-soft"
-				>
+				<output className="text-center text-sm text-sea-ink-soft">
 					{messages.consent.loading}
 				</output>
 			) : error ? (
@@ -220,9 +222,7 @@ function ConsentPage() {
 			) : preview ? (
 				<>
 					{hasRequestedAttributes ? (
-						<section
-							className="grid gap-3 rounded-2xl border border-line bg-bg-surface p-5"
-						>
+						<section className="grid gap-3 rounded-2xl border border-line bg-bg-surface p-5">
 							<div>
 								<h2
 									id="requested-heading"
@@ -290,9 +290,7 @@ function ConsentPage() {
 							</ul>
 						</section>
 					) : (
-						<section
-							className="grid gap-1 rounded-2xl border border-line bg-bg-surface p-5"
-						>
+						<section className="grid gap-1 rounded-2xl border border-line bg-bg-surface p-5">
 							<h2 className="font-display text-lg font-bold text-sea-ink">
 								{messages.consent.noAttributesTitle}
 							</h2>
@@ -415,7 +413,6 @@ function AttributeRow({
 	const field = ATTRIBUTE_FIELDS[attribute.key];
 	const inputId = useId();
 	const errorId = `${inputId}-error`;
-	const invalid = editing && !!editError;
 	const empty = attribute.value.trim() === "";
 
 	if (editing) {

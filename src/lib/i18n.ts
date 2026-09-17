@@ -47,7 +47,22 @@ export const messages = {
 		},
 		signUp: {
 			title: "Create your HeyMe account",
-			lede: "Start with the identity details tied to your new account.",
+			description: "Share your identity with apps on your terms.",
+			chooseLede:
+				"Choose how you'll use HeyMe. One email address belongs to one account kind.",
+			choiceIdentity: "Share my identity",
+			choiceIdentityHint:
+				"Manage your Base Identity, Contextual Profiles, and what apps can see.",
+			choiceDeveloper: "Integrate an application",
+			choiceDeveloperHint:
+				"Register an OAuth client and receive its integration credentials.",
+			getStarted: "Get started",
+			identityHolderTitle: "Share my identity",
+			developerTitle: "Integrate an application",
+			developerDescription:
+				"Register your application and receive the credentials it needs to connect to HeyMe.",
+			companyNameLabel: "Company name",
+			companyNamePlaceholder: "e.g. Acme Inc.",
 			firstNameLabel: "First name",
 			lastNameLabel: "Last name",
 			emailLabel: "Email",

@@ -18,6 +18,12 @@ export const Route = createFileRoute("/api/profile-picture")({
 						{ status: 401 },
 					);
 				}
+				if (session.user.accountKind !== "identity_holder") {
+					return Response.json(
+						{ error: "Developer accounts cannot upload profile pictures" },
+						{ status: 403 },
+					);
+				}
 
 				let form: FormData;
 				try {

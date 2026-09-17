@@ -10,6 +10,7 @@ type NavItem = {
 	to: "/profiles" | "/history" | "/authorized-apps" | "/developer";
 	label: string;
 	icon: LucideIcon;
+	kind: "identity_holder" | "developer";
 };
 
 const NAV_ITEMS: readonly NavItem[] = [
@@ -17,21 +18,25 @@ const NAV_ITEMS: readonly NavItem[] = [
 		to: "/profiles",
 		label: messages.nav.profiles,
 		icon: Users,
+		kind: "identity_holder",
 	},
 	{
 		to: "/history",
 		label: messages.nav.history,
 		icon: ClipboardList,
+		kind: "identity_holder",
 	},
 	{
 		to: "/authorized-apps",
 		label: messages.nav.connectedApps,
 		icon: Link2,
+		kind: "identity_holder",
 	},
 	{
 		to: "/developer",
 		label: messages.nav.developer,
 		icon: Code2,
+		kind: "developer",
 	},
 ] as const;
 
@@ -47,6 +52,8 @@ export function Sidebar() {
 	const [signOutError, setSignOutError] = useState(false);
 
 	const user = session?.user;
+	const accountKind = user?.accountKind;
+	const navItems = NAV_ITEMS.filter((item) => item.kind === accountKind);
 
 	async function handleSignOut() {
 		if (isSigningOut) return;
@@ -76,8 +83,8 @@ export function Sidebar() {
 			aria-label={messages.sidebar.menuLabel}
 			className="flex w-full shrink-0 flex-col gap-4 overflow-y-auto border-b border-line bg-bg-surface px-4 py-4 md:h-full md:w-64 md:gap-0 md:border-b-0 md:border-r md:px-0 md:py-0"
 		>
-			<SidebarBrand />
-			<SidebarNav />
+			<SidebarBrand accountKind={accountKind} />
+			<SidebarNav items={navItems} />
 			<SidebarAccount
 				name={userName}
 				email={userEmail}
@@ -92,10 +99,10 @@ export function Sidebar() {
 	);
 }
 
-function SidebarBrand() {
+function SidebarBrand({ accountKind }: { accountKind?: string }) {
 	return (
 		<Link
-			to="/profiles"
+			to={accountKind === "developer" ? "/developer" : "/profiles"}
 			className="inline-flex items-center gap-2.5 font-extrabold tracking-tight text-sea-ink no-underline hover:text-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring md:border-b md:border-line md:px-5 md:py-4"
 			aria-label={messages.nav.brandLabel}
 		>
@@ -112,14 +119,14 @@ function SidebarBrand() {
 	);
 }
 
-function SidebarNav() {
+function SidebarNav({ items }: { items: readonly NavItem[] }) {
 	return (
 		<nav
 			aria-label={messages.nav.appNavLabel}
 			className="w-full md:flex md:flex-1 md:flex-col md:items-stretch md:overflow-y-auto md:px-3 md:py-4"
 		>
 			<ul className="grid w-full grid-cols-2 gap-1 md:flex md:flex-col md:items-stretch">
-				{NAV_ITEMS.map((item) => (
+				{items.map((item) => (
 					<li key={item.label} className="min-w-0 md:w-full">
 						<SidebarNavLink item={item} />
 					</li>

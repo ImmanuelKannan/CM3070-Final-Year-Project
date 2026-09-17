@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useId, useState } from "react";
 import { AddProfileModal } from "#/features/profiles/AddProfileModal";
@@ -22,6 +22,11 @@ import { getIdentity, updateIdentityAttribute } from "#/lib/identity.functions";
 import type { ProfileType } from "#/lib/profile-catalogue";
 
 export const Route = createFileRoute("/_authenticated/profiles")({
+	beforeLoad: ({ context }) => {
+		if (context.session.user.accountKind !== "identity_holder") {
+			throw redirect({ to: "/developer" });
+		}
+	},
 	loader: async () => {
 		const [identity, profiles] = await Promise.all([
 			getIdentity(),

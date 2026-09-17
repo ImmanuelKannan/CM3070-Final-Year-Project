@@ -14,12 +14,12 @@ import {
 import { auth } from "#/lib/auth";
 import { getSessionFromRequest } from "#/lib/auth.server";
 import {
-	validateOauthQuery,
 	type ConsentDecision,
 	type ConsentGrantSource,
 	generateQUeryHash,
 	normalizeAuthorizationQuery,
 	normalizeScopes,
+	validateOauthQuery,
 } from "#/lib/consent-grants";
 import type {
 	ApproveConsentGrantInput,
@@ -77,6 +77,12 @@ export async function approveConsentGrantFromRequest(
 		throw new APIError("UNAUTHORIZED", { message: "Sign in to continue" });
 	}
 
+	if (session.user.accountKind !== "identity_holder") {
+		throw new APIError("FORBIDDEN", {
+			message: "Sign in with an Identity Holder account to authorize access",
+		});
+	}
+
 	return approveConsentGrant(data, session, getRequestHeaders());
 }
 
@@ -87,6 +93,12 @@ export async function rejectConsentGrantFromRequest(
 
 	if (!session) {
 		throw new APIError("UNAUTHORIZED", { message: "Sign in to continue" });
+	}
+
+	if (session.user.accountKind !== "identity_holder") {
+		throw new APIError("FORBIDDEN", {
+			message: "Sign in with an Identity Holder account to authorize access",
+		});
 	}
 
 	return rejectConsentGrant(data, session, getRequestHeaders());

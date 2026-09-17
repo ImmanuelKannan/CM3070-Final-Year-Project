@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { Link2 } from "lucide-react";
 
 import { listAuthorizedApps } from "#/lib/authorized-apps.functions";
@@ -8,6 +8,11 @@ import { getLabelText } from "#/lib/permission-label";
 import { ATTRIBUTE_LABELS } from "#/lib/profile-catalogue";
 
 export const Route = createFileRoute("/_authenticated/authorized-apps/")({
+	beforeLoad: ({ context }) => {
+		if (context.session.user.accountKind !== "identity_holder") {
+			throw redirect({ to: "/developer" });
+		}
+	},
 	loader: async () => ({ authorizedApps: await listAuthorizedApps() }),
 	pendingComponent: AuthorizedAppsPending,
 	component: AuthorizedAppsIndex,

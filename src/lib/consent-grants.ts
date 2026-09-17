@@ -98,9 +98,7 @@ export async function verifyOAuthQuery(
 	);
 }
 
-export async function validateOauthQuery(
-	oauthQuery: string,
-): Promise<void> {
+export async function validateOauthQuery(oauthQuery: string): Promise<void> {
 	if (!(await verifyOAuthQuery(oauthQuery))) {
 		throw new APIError("BAD_REQUEST", {
 			message: "Authorization request is invalid or expired",

@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { APIError } from "better-auth/api";
 import { z } from "zod";
 
-import { getUserIdFromRequest } from "#/lib/auth.server";
+import { requireAccountKind } from "#/lib/auth.server";
 import {
 	type ConsentHistory,
 	getConsentHistory as getConsentHistoryData,
@@ -27,8 +27,9 @@ function normalizeConsentHistoryInput(input: unknown) {
 export const getConsentHistory = createServerFn({ method: "GET" })
 	.validator(normalizeConsentHistoryInput)
 	.handler(async ({ data }): Promise<ConsentHistory> => {
-		const userId = await getUserIdFromRequest(
-			"Sign in to review consent history",
+		const userId = await requireAccountKind(
+			"identity_holder",
+			"Sign in with an Identity Holder account to review consent history",
 		);
 		return getConsentHistoryData(userId, data);
 	});

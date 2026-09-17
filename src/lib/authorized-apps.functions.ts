@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { APIError } from "better-auth/api";
 import { z } from "zod";
 
-import { getUserIdFromRequest } from "#/lib/auth.server";
+import { requireAccountKind } from "#/lib/auth.server";
 import type { AuthorizedApp, RevokeAppResult } from "#/lib/authorized-apps";
 import {
 	getAuthorizedApp as getAuthorizedAppImpl,
@@ -25,26 +25,32 @@ function parseClientId(input: unknown): string {
 	return parsed.data;
 }
 
-const AUTHORIZED_APPS_ERROR_MESSAGE =
-	"Sign in to manage your authorized applications";
-
 export const listAuthorizedApps = createServerFn({
 	method: "GET",
 }).handler(async (): Promise<AuthorizedApp[]> => {
-	const userId = await getUserIdFromRequest(AUTHORIZED_APPS_ERROR_MESSAGE);
+	const userId = await requireAccountKind(
+		"identity_holder",
+		"You must sign in with an identity holder account",
+	);
 	return listAuthorizedAppsImpl(userId);
 });
 
 export const getAuthorizedApps = createServerFn({ method: "GET" })
 	.validator(parseClientId)
 	.handler(async ({ data }): Promise<AuthorizedApp> => {
-		const userId = await getUserIdFromRequest(AUTHORIZED_APPS_ERROR_MESSAGE);
+		const userId = await requireAccountKind(
+			"identity_holder",
+			"You must sign in with an identity holder account",
+		);
 		return getAuthorizedAppImpl(userId, data);
 	});
 
 export const revokeAuthorizedApp = createServerFn({ method: "POST" })
 	.validator(parseClientId)
 	.handler(async ({ data }): Promise<RevokeAppResult> => {
-		const userId = await getUserIdFromRequest(AUTHORIZED_APPS_ERROR_MESSAGE);
+		const userId = await requireAccountKind(
+			"identity_holder",
+			"You must sign in with an identity holder account",
+		);
 		return revokeAuthorizedAppsImpl(userId, data);
 	});

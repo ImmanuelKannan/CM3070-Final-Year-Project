@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { type FormEvent, useId, useState } from "react";
 
@@ -15,6 +15,11 @@ import {
 import { PROFILE_TYPE_LABELS, PROFILE_TYPES } from "#/lib/profile-catalogue";
 
 export const Route = createFileRoute("/_authenticated/developer")({
+	beforeLoad: ({ context }) => {
+		if (context.session.user.accountKind !== "developer") {
+			throw redirect({ to: "/profiles" });
+		}
+	},
 	loader: async () => ({ clients: await listOAuthClientsFn() }),
 	pendingComponent: DeveloperPending,
 	errorComponent: DeveloperError,
@@ -106,7 +111,9 @@ function DeveloperPage() {
 	);
 	const [isCopied, setIsCopied] = useState<string | null>(null);
 	const [copyError, setCopyError] = useState<string | null>(null);
-	const [isDeletingClientId, setIsDeletingClientId] = useState<string | null>(null);
+	const [isDeletingClientId, setIsDeletingClientId] = useState<string | null>(
+		null,
+	);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
 
 	const nameId = useId();

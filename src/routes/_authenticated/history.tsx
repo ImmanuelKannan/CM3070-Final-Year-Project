@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
 	CheckCircle,
@@ -30,7 +30,10 @@ type ConsentHistoryEventConfig = {
 	badgeClass: string;
 };
 
-const CONSENT_HISTORY_EVENT_CONFIG: Record<ConsentHistoryEvent["type"], ConsentHistoryEventConfig> = {
+const CONSENT_HISTORY_EVENT_CONFIG: Record<
+	ConsentHistoryEvent["type"],
+	ConsentHistoryEventConfig
+> = {
 	requested: {
 		label: messages.history.requested,
 		message: messages.history.eventRequested,
@@ -62,6 +65,11 @@ const CONSENT_HISTORY_EVENT_CONFIG: Record<ConsentHistoryEvent["type"], ConsentH
 };
 
 export const Route = createFileRoute("/_authenticated/history")({
+	beforeLoad: ({ context }) => {
+		if (context.session.user.accountKind !== "identity_holder") {
+			throw redirect({ to: "/developer" });
+		}
+	},
 	validateSearch: z.object({
 		search: z.string().max(200).optional(),
 		page: z.coerce.number().int().min(1).max(10_000).catch(1),
@@ -159,9 +167,7 @@ function HistoryPage() {
 								) : null}
 							</div>
 							<div className="relative">
-								<Search
-									className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-sea-ink-soft"
-								/>
+								<Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-sea-ink-soft" />
 								<input
 									id="history-search"
 									name="search"
@@ -228,9 +234,7 @@ function Summary({ summary }: { summary: ConsentHistory["summary"] }) {
 	] as const;
 
 	return (
-		<section
-			className="grid gap-3 rounded-2xl border border-line bg-bg-surface p-4 sm:p-5"
-		>
+		<section className="grid gap-3 rounded-2xl border border-line bg-bg-surface p-4 sm:p-5">
 			<h2
 				id="history-summary-heading"
 				className="font-display text-xl font-bold text-sea-ink"
@@ -243,9 +247,7 @@ function Summary({ summary }: { summary: ConsentHistory["summary"] }) {
 					return (
 						<div key={item.label} className="grid gap-1">
 							<dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sea-ink-soft">
-								<Icon
-									className={`size-4 ${item.iconClass}`}
-								/>
+								<Icon className={`size-4 ${item.iconClass}`} />
 								{item.label}
 							</dt>
 							<dd className="text-xl font-bold text-sea-ink">{item.value}</dd>
@@ -260,9 +262,7 @@ function Summary({ summary }: { summary: ConsentHistory["summary"] }) {
 function EmptyHistory({ hasSearch }: { hasSearch: boolean }) {
 	return (
 		<section className="grid gap-2 rounded-2xl border border-line bg-bg-surface p-8 text-center">
-			<span
-				className="mx-auto inline-flex size-12 items-center justify-center rounded-full bg-bg-base text-lagoon-deep"
-			>
+			<span className="mx-auto inline-flex size-12 items-center justify-center rounded-full bg-bg-base text-lagoon-deep">
 				{hasSearch ? (
 					<Search className="size-5" />
 				) : (
@@ -291,9 +291,7 @@ function Timeline({ events }: { events: ConsentHistory["events"] }) {
 				{messages.history.timelineHeading}
 			</h2>
 			<div className="relative">
-				<div
-					className="absolute bottom-4 left-4 top-4 w-px bg-line sm:bottom-5 sm:left-5 sm:top-5"
-				/>
+				<div className="absolute bottom-4 left-4 top-4 w-px bg-line sm:bottom-5 sm:left-5 sm:top-5" />
 				<ol className="grid gap-3">
 					{events.map((event) => (
 						<EventRow key={event.id} event={event} />
@@ -312,9 +310,7 @@ function EventRow({ event }: { event: ConsentHistoryEvent }) {
 
 	return (
 		<li className="relative pl-10 sm:pl-12">
-			<span
-				className="absolute left-0 top-3 inline-flex size-8 items-center justify-center rounded-full border border-line bg-bg-base sm:size-10"
-			>
+			<span className="absolute left-0 top-3 inline-flex size-8 items-center justify-center rounded-full border border-line bg-bg-base sm:size-10">
 				<Icon className={`size-4 sm:size-5 ${config.iconClass}`} />
 			</span>
 			<details className="group rounded-2xl border border-line bg-bg-surface">
@@ -332,9 +328,7 @@ function EventRow({ event }: { event: ConsentHistoryEvent }) {
 							<EventTime value={event.createdAt} />
 						</span>
 					</span>
-					<ChevronDown
-						className="mt-0.5 size-5 shrink-0 text-sea-ink-soft transition-transform group-open:rotate-180"
-					/>
+					<ChevronDown className="mt-0.5 size-5 shrink-0 text-sea-ink-soft transition-transform group-open:rotate-180" />
 				</summary>
 				<div className="grid gap-3 border-t border-line p-4">
 					<h3 className="font-display text-sm font-bold text-sea-ink">
@@ -459,16 +453,12 @@ function Pagination({
 						{messages.history.previous}
 					</Link>
 				) : (
-					<span
-						className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-line bg-bg-surface px-3.5 py-2 text-sm font-semibold text-sea-ink-soft opacity-60"
-					>
+					<span className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-line bg-bg-surface px-3.5 py-2 text-sm font-semibold text-sea-ink-soft opacity-60">
 						<ChevronLeft className="size-4" />
 						{messages.history.previous}
 					</span>
 				)}
-				<span
-					className="inline-flex min-h-11 items-center rounded-lg bg-bg-base px-3.5 py-2 text-sm font-semibold text-sea-ink"
-				>
+				<span className="inline-flex min-h-11 items-center rounded-lg bg-bg-base px-3.5 py-2 text-sm font-semibold text-sea-ink">
 					{messages.history.page.replace("{page}", String(page))}
 				</span>
 				{hasNext ? (
@@ -481,9 +471,7 @@ function Pagination({
 						<ChevronRight className="size-4" />
 					</Link>
 				) : (
-					<span
-						className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-line bg-bg-surface px-3.5 py-2 text-sm font-semibold text-sea-ink-soft opacity-60"
-					>
+					<span className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-line bg-bg-surface px-3.5 py-2 text-sm font-semibold text-sea-ink-soft opacity-60">
 						{messages.history.next}
 						<ChevronRight className="size-4" />
 					</span>

@@ -5,13 +5,18 @@ import { jwt } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
 import { db } from "#/db";
+import { identityAttributes } from "#/db/schema";
 import {
 	getConsentBoundUserInfoClaims,
 	suppressIdentityTokenClaims,
 } from "#/lib/consent-claims";
 import { resolveOAuthProviderConsentReference } from "#/lib/consent-grants";
 import { ALLOWED_ATTRIBUTE_KEYS } from "#/lib/profile-catalogue";
-import { normalizeRegistrationName } from "#/lib/registration";
+import {
+	normalizeAccountKind,
+	normalizeRegistrationCompanyName,
+	normalizeRegistrationName,
+} from "#/lib/registration";
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, { provider: "pg", transaction: true }),
@@ -22,14 +27,37 @@ export const auth = betterAuth({
 	},
 	user: {
 		additionalFields: {
-			firstName: { type: "string", required: true, returned: false },
-			lastName: { type: "string", required: true, returned: false },
+			firstName: { type: "string", required: false, returned: false },
+			lastName: { type: "string", required: false, returned: false },
+			accountKind: {
+				type: "string",
+				required: true,
+				returned: true,
+				defaultValue: "identity_holder",
+			},
 		},
 	},
 	databaseHooks: {
 		user: {
 			create: {
 				before: async (user) => {
+					const accountKind = normalizeAccountKind(user.accountKind);
+					const email = user.email.trim().toLowerCase();
+
+					if (accountKind === "developer") {
+						const companyName = normalizeRegistrationCompanyName(user.name);
+						return {
+							data: {
+								...user,
+								accountKind,
+								email,
+								firstName: null,
+								lastName: null,
+								name: companyName,
+							},
+						};
+					}
+
 					const firstName = normalizeRegistrationName(
 						user.firstName,
 						"First name",
@@ -42,11 +70,29 @@ export const auth = betterAuth({
 					return {
 						data: {
 							...user,
+							accountKind,
+							email,
 							firstName,
 							lastName,
 							name: `${firstName} ${lastName}`,
 						},
 					};
+				},
+				after: async (user) => {
+					if (user.accountKind === "developer") return;
+					await db.insert(identityAttributes).values([
+						{ userId: user.id, key: "email", value: user.email },
+						{
+							userId: user.id,
+							key: "firstName",
+							value: String(user.firstName ?? ""),
+						},
+						{
+							userId: user.id,
+							key: "lastName",
+							value: String(user.lastName ?? ""),
+						},
+					]);
 				},
 			},
 		},

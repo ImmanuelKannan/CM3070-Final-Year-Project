@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { db } from "#/db";
 import { oauthClient } from "#/db/schema";
-import { getUserIdFromRequest } from "#/lib/auth.server";
+import { requireAccountKind } from "#/lib/auth.server";
 import {
 	generateQUeryHash,
 	normalizeAuthorizationQuery,
@@ -83,7 +83,10 @@ export const getConsentPreview = createServerFn({ method: "POST" })
 		return parsed.data;
 	})
 	.handler(async ({ data }): Promise<ConsentPreviewResult> => {
-		const userId = await getUserIdFromRequest("Sign in to continue");
+		const userId = await requireAccountKind(
+			"identity_holder",
+			"Sign in with an Identity Holder account to authorize access",
+		);
 		await validateOauthQuery(data.oauthQuery);
 
 		const query = new URLSearchParams(data.oauthQuery);

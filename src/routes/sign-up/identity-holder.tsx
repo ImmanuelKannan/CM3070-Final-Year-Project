@@ -9,25 +9,23 @@ import { getSession } from "#/lib/auth.functions";
 import { authClient } from "#/lib/auth-client";
 import { messages } from "#/lib/i18n";
 
-export const Route = createFileRoute("/sign-in")({
+export const Route = createFileRoute("/sign-up/identity-holder")({
 	beforeLoad: async () => {
-		const session = await getSession();
-		if (session) {
-			throw redirect({
-				to:
-					session.user.accountKind === "developer" ? "/developer" : "/profiles",
-			});
-		}
+		if (await getSession()) throw redirect({ to: "/profiles" });
 	},
-	component: SignIn,
+	component: IdentityHolderSignUp,
 });
 
-function SignIn() {
+function IdentityHolderSignUp() {
+	const [firstName, setFirstName] = useState("");
+	const [lastName, setLastName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState<string | null>(null);
 	const [isPending, setIsPending] = useState(false);
 
+	const firstNameId = useId();
+	const lastNameId = useId();
 	const emailId = useId();
 	const passwordId = useId();
 	const errorId = useId();
@@ -41,27 +39,33 @@ function SignIn() {
 		setIsPending(true);
 		setError(null);
 
+		const normalizedFirstName = firstName.trim();
+		const normalizedLastName = lastName.trim();
+
 		try {
-			const { data, error: signInError } = await authClient.signIn.email({
+			const { data, error: signUpError } = await authClient.signUp.email({
+				firstName: normalizedFirstName,
+				lastName: normalizedLastName,
+				name: `${normalizedFirstName} ${normalizedLastName}`,
 				email: email.trim(),
 				password,
+				accountKind: "identity_holder",
 			});
 
-			if (signInError) {
-				setError(messages.auth.signIn.errorBody);
+			if (signUpError) {
+				setError(messages.auth.signUp.errorBody);
 				return;
 			}
 
-			if (data?.redirect && data?.url) return;
+			const resumed = data as unknown as {
+				redirect?: boolean;
+				url?: string;
+			} | null;
+			if (resumed?.redirect && resumed?.url) return;
 
-			const session = await authClient.getSession();
-			window.location.assign(
-				session.data?.user.accountKind === "developer"
-					? "/developer"
-					: "/profiles",
-			);
+			window.location.assign("/profiles");
 		} catch {
-			setError(messages.auth.signIn.errorBody);
+			setError(messages.auth.signUp.errorBody);
 		} finally {
 			setIsPending(false);
 		}
@@ -71,10 +75,10 @@ function SignIn() {
 		<div className="mx-auto grid w-full max-w-md gap-8 px-4">
 			<header className="grid gap-2">
 				<h1 className="font-display text-3xl font-bold tracking-tight text-sea-ink sm:text-4xl">
-					{messages.auth.signIn.title}
+					{messages.auth.signUp.identityHolderTitle}
 				</h1>
 				<p className="text-base leading-relaxed text-sea-ink-soft">
-					{messages.auth.signIn.lede}
+					{messages.auth.signUp.description}
 				</p>
 			</header>
 
@@ -86,17 +90,52 @@ function SignIn() {
 					<div
 						id={errorId}
 						role="alert"
-						aria-live="assertive"
-						className="grid gap-1 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+						className="grid gap-1 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-destructive"
 					>
-						<p className="font-semibold">{messages.auth.signIn.errorHeading}</p>
+						<p className="font-semibold">{messages.auth.signUp.errorHeading}</p>
 						<p>{error}</p>
 					</div>
 				) : null}
 
+				<div className="grid gap-5 sm:grid-cols-2">
+					<div className="grid gap-1.5">
+						<label htmlFor={firstNameId} className="font-semibold text-sea-ink">
+							{messages.auth.signUp.firstNameLabel}
+						</label>
+						<Input
+							id={firstNameId}
+							name="firstName"
+							type="text"
+							autoComplete="given-name"
+							required
+							maxLength={100}
+							value={firstName}
+							onChange={(event) => setFirstName(event.target.value)}
+							disabled={isPending}
+						/>
+					</div>
+
+					<div className="grid gap-1.5">
+						<label htmlFor={lastNameId} className="font-semibold text-sea-ink">
+							{messages.auth.signUp.lastNameLabel}
+						</label>
+						<Input
+							id={lastNameId}
+							name="lastName"
+							type="text"
+							autoComplete="family-name"
+							required
+							maxLength={100}
+							value={lastName}
+							onChange={(event) => setLastName(event.target.value)}
+							disabled={isPending}
+						/>
+					</div>
+				</div>
+
 				<div className="grid gap-1.5">
 					<label htmlFor={emailId} className="font-semibold text-sea-ink">
-						{messages.auth.signIn.emailLabel}
+						{messages.auth.signUp.emailLabel}
 					</label>
 					<Input
 						id={emailId}
@@ -105,29 +144,32 @@ function SignIn() {
 						autoComplete="email"
 						inputMode="email"
 						required
-						placeholder={messages.auth.signIn.emailPlaceholder}
+						placeholder={messages.auth.signUp.emailPlaceholder}
 						value={email}
 						onChange={(event) => setEmail(event.target.value)}
 						disabled={isPending}
-						aria-describedby={error ? errorId : undefined}
 					/>
 				</div>
 
 				<div className="grid gap-1.5">
 					<label htmlFor={passwordId} className="font-semibold text-sea-ink">
-						{messages.auth.signIn.passwordLabel}
+						{messages.auth.signUp.passwordLabel}
 					</label>
 					<Input
 						id={passwordId}
 						name="password"
 						type="password"
-						autoComplete="current-password"
+						autoComplete="new-password"
 						required
+						minLength={8}
+						maxLength={128}
 						value={password}
 						onChange={(event) => setPassword(event.target.value)}
 						disabled={isPending}
-						aria-describedby={error ? errorId : undefined}
 					/>
+					<p className="text-sm text-sea-ink-soft">
+						{messages.auth.signUp.passwordHint}
+					</p>
 				</div>
 
 				<button
@@ -136,17 +178,17 @@ function SignIn() {
 					className="inline-flex items-center justify-center rounded-lg bg-sea-ink px-4 py-2.5 font-semibold text-foam no-underline transition-colors hover:bg-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
 				>
 					{isPending
-						? messages.auth.signIn.submitting
-						: messages.auth.signIn.submit}
+						? messages.auth.signUp.submitting
+						: messages.auth.signUp.submit}
 				</button>
 
 				<p className="text-center text-sm text-sea-ink-soft">
-					{messages.auth.signIn.noAccount}{" "}
+					{messages.auth.signUp.hasAccount}{" "}
 					<a
-						href={`/sign-up${queryString}`}
+						href={`/sign-in${queryString}`}
 						className="font-semibold text-sea-ink underline decoration-line underline-offset-4 hover:text-lagoon-deep focus-visible:rounded-sm focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 					>
-						{messages.auth.signIn.createAccount}
+						{messages.auth.signUp.signIn}
 					</a>
 				</p>
 			</form>
