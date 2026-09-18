@@ -62,7 +62,7 @@ export const messages = {
 			developerDescription:
 				"Register your application and receive the credentials it needs to connect to HeyMe.",
 			companyNameLabel: "Company name",
-			companyNamePlaceholder: "e.g. Acme Inc.",
+			companyNamePlaceholder: "Aperture Science, Inc.",
 			firstNameLabel: "First name",
 			lastNameLabel: "Last name",
 			emailLabel: "Email",
