@@ -446,18 +446,18 @@ function AttributeRow({
 	if (editing) {
 		return (
 			<li className="rounded-lg border border-lagoon bg-bg-base/40 p-3">
-				<div className="mb-1.5 flex items-center justify-between gap-2">
+				<div className="mb-1.5 flex items-center gap-3">
+					<AttributeInclusionToggle
+						attribute={attribute}
+						isIncluded={isIncluded}
+						onToggleInclude={onToggleInclude}
+					/>
 					<label
 						htmlFor={inputId}
 						className="block text-sm font-semibold text-sea-ink"
 					>
 						{attribute.label}
 					</label>
-					<AttributeInclusionToggle
-						attribute={attribute}
-						isIncluded={isIncluded}
-						onToggleInclude={onToggleInclude}
-					/>
 				</div>
 				<div className="grid gap-2">
 					<EditInput
@@ -499,8 +499,13 @@ function AttributeRow({
 	}
 
 	return (
-		<li className="flex items-center justify-between gap-3 px-3 py-2.5">
-			<div className="min-w-0">
+		<li className="flex items-center gap-3 px-3 py-2.5">
+			<AttributeInclusionToggle
+				attribute={attribute}
+				isIncluded={isIncluded}
+				onToggleInclude={onToggleInclude}
+			/>
+			<div className="min-w-0 flex-1">
 				<p className="truncate text-sm font-semibold text-sea-ink">
 					{attribute.label}
 				</p>
@@ -508,23 +513,16 @@ function AttributeRow({
 					{empty ? messages.consent.notProvided : attribute.value}
 				</p>
 			</div>
-			<div className="flex shrink-0 items-center gap-2">
-				<AttributeInclusionToggle
-					attribute={attribute}
-					isIncluded={isIncluded}
-					onToggleInclude={onToggleInclude}
-				/>
-				{isIncluded ? (
-					<button
-						type="button"
-						onClick={onStartEdit}
-						className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-sea-ink transition-colors hover:bg-bg-base focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
-					>
-						<Pencil className="h-3.5 w-3.5" />
-						{messages.consent.edit}
-					</button>
-				) : null}
-			</div>
+			{isIncluded ? (
+				<button
+					type="button"
+					onClick={onStartEdit}
+					className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-sea-ink transition-colors hover:bg-bg-base focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+				>
+					<Pencil className="h-3.5 w-3.5" />
+					{messages.consent.edit}
+				</button>
+			) : null}
 		</li>
 	);
 }
