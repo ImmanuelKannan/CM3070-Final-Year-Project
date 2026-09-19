@@ -1,12 +1,26 @@
 import { z } from "zod";
 
-export const PROFILE_TYPES = ["social", "banking", "school", "others"] as const;
+export const APPLICATION_CONTEXTS = [
+	"social",
+	"banking",
+	"school",
+	"employment",
+	"healthcare",
+	"government",
+] as const;
+
+export type ApplicationContext = (typeof APPLICATION_CONTEXTS)[number];
+
+export const PROFILE_TYPES = [...APPLICATION_CONTEXTS, "others"] as const;
 export type ProfileType = (typeof PROFILE_TYPES)[number];
 
 export const PROFILE_TYPE_LABELS: Record<ProfileType, string> = {
 	social: "Social",
 	banking: "Banking",
-	school: "School",
+	school: "Education",
+	employment: "Employment",
+	healthcare: "Healthcare",
+	government: "Government",
 	others: "Others",
 };
 

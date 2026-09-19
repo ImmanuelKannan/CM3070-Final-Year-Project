@@ -20,6 +20,7 @@ import {
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, { provider: "pg", transaction: true }),
+	disabledPaths: ["/oauth2/create-client"],
 	emailAndPassword: {
 		enabled: true,
 		minPasswordLength: 8,
@@ -114,6 +115,7 @@ export const auth = betterAuth({
 				...ALLOWED_ATTRIBUTE_KEYS,
 			],
 			allowDynamicClientRegistration: false,
+			clientPrivileges: ({ user }) => user?.accountKind === "developer",
 			silenceWarnings: {
 				oauthAuthServerConfig: true,
 				openidConfig: true,

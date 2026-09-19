@@ -2,6 +2,8 @@ import { APIError } from "better-auth/api";
 
 import {
 	ALLOWED_ATTRIBUTE_KEYS,
+	APPLICATION_CONTEXTS,
+	type ApplicationContext,
 	ATTRIBUTE_LABELS,
 	ATTRIBUTE_OIDC_CLAIMS,
 } from "#/lib/profile-catalogue";
@@ -16,6 +18,29 @@ export const STANDARD_SCOPE_ATTRIBUTES: Record<string, readonly string[]> = {
 };
 
 const STANDARD_SCOPES = new Set(Object.keys(STANDARD_SCOPE_ATTRIBUTES));
+
+export function getAppContext(
+	metadata: any,
+): ApplicationContext | null {
+	let parsedMetadata = metadata;
+
+	if (typeof metadata === "string") {
+		try {
+			parsedMetadata = JSON.parse(metadata);
+		} catch {
+			return null;
+		}
+	}
+
+	if (!parsedMetadata || typeof parsedMetadata !== "object") return null;
+
+	const value = (parsedMetadata as Record<string, unknown>).profileType;
+
+	return typeof value === "string" &&
+		(APPLICATION_CONTEXTS as readonly string[]).includes(value)
+		? (value as ApplicationContext)
+		: null;
+}
 
 export function getRequestedIdentityAttributeKeys(
 	scopes: readonly string[],

@@ -13,13 +13,14 @@ import {
 } from "#/lib/consent-grants";
 import { saveConsentRequest } from "#/lib/consent-history";
 import {
+	getAppContext,
 	getRequestedIdentityAttributeKeys,
 	type PreviewAttribute,
 	resolveConsentPreviewAttributes,
 } from "#/lib/consent-preview";
 import { getProfile, listProfiles } from "#/lib/contextual-profiles";
 import { getBaseIdentity } from "#/lib/identity";
-import { PROFILE_TYPES, type ProfileType } from "#/lib/profile-catalogue";
+import type { ProfileType } from "#/lib/profile-catalogue";
 
 const consentPreviewInputValidateSchema = z.strictObject({
 	oauthQuery: z
@@ -52,25 +53,6 @@ export type ConsentPreviewResult = {
 	selectedProfileName: string | null;
 	attributes: PreviewAttribute[];
 };
-
-function getProfileType(metadata: unknown): ProfileType | null {
-	let parsedMetadata = metadata;
-	if (typeof metadata === "string") {
-		try {
-			parsedMetadata = JSON.parse(metadata);
-		} catch {
-			return null;
-		}
-	}
-
-	if (!parsedMetadata || typeof parsedMetadata !== "object") return null;
-
-	const value = (parsedMetadata as Record<string, unknown>).profileType;
-	return typeof value === "string" &&
-		(PROFILE_TYPES as readonly string[]).includes(value)
-		? (value as ProfileType)
-		: null;
-}
 
 export const getConsentPreview = createServerFn({ method: "POST" })
 	.validator((input: unknown) => {
@@ -114,7 +96,7 @@ export const getConsentPreview = createServerFn({ method: "POST" })
 			throw new APIError("NOT_FOUND", { message: "Application not found" });
 		}
 
-		const suggestedType = getProfileType(client.metadata);
+		const suggestedType = getAppContext(client.metadata);
 		const [baseProfile, customProfiles] = await Promise.all([
 			getBaseIdentity(userId),
 			listProfiles(userId),

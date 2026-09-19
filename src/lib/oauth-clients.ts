@@ -3,7 +3,10 @@ import { APIError } from "better-auth/api";
 import { z } from "zod";
 
 import { auth } from "#/lib/auth";
-import { PROFILE_TYPES, type ProfileType } from "#/lib/profile-catalogue";
+import {
+	APPLICATION_CONTEXTS,
+	type ApplicationContext,
+} from "#/lib/profile-catalogue";
 
 const clientNameSchema = z.string().trim().min(1).max(100);
 
@@ -13,20 +16,20 @@ const redirectUrisSchema = z
 
 export const createOAuthClientInputSchema = z.strictObject({
 	name: clientNameSchema,
-	profileType: z.enum(PROFILE_TYPES),
+	profileType: z.enum(APPLICATION_CONTEXTS),
 	redirectUris: redirectUrisSchema,
 });
 
 export type CreateOAuthClientInput = z.infer<
 	typeof createOAuthClientInputSchema
 >;
-export type OAuthClientProfileType = ProfileType;
+export type OAuthClientProfileType = ApplicationContext;
 
 export type OAuthClientSummary = {
 	client_id: string;
 	client_name?: string;
 	redirect_uris: string[];
-	metadata?: { profileType: ProfileType };
+	metadata?: { profileType: ApplicationContext };
 };
 
 function toOAuthClientSummary(
@@ -42,9 +45,11 @@ function toOAuthClientSummary(
 	};
 	if (
 		typeof profileType === "string" &&
-		(PROFILE_TYPES as readonly string[]).includes(profileType)
+		(APPLICATION_CONTEXTS as readonly string[]).includes(profileType)
 	) {
-		clientSummary.metadata = { profileType: profileType as ProfileType };
+		clientSummary.metadata = {
+			profileType: profileType as ApplicationContext,
+		};
 	}
 	return clientSummary;
 }

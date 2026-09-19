@@ -6,6 +6,9 @@ const TYPE_ICONS: Record<ProfileType, string> = {
 	social: "👥",
 	banking: "🏦",
 	school: "🎓",
+	employment: "💼",
+	healthcare: "🩺",
+	government: "🏛️",
 	others: "📁",
 };
 

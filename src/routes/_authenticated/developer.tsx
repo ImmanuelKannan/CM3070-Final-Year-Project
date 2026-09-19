@@ -12,7 +12,10 @@ import {
 	deleteOAuthClientFn,
 	listOAuthClientsFn,
 } from "#/lib/oauth-clients.functions";
-import { PROFILE_TYPE_LABELS, PROFILE_TYPES } from "#/lib/profile-catalogue";
+import {
+	APPLICATION_CONTEXTS,
+	PROFILE_TYPE_LABELS,
+} from "#/lib/profile-catalogue";
 
 export const Route = createFileRoute("/_authenticated/developer")({
 	beforeLoad: ({ context }) => {
@@ -306,7 +309,7 @@ function DeveloperPage() {
 								<option value="">
 									{messages.developer.profileTypePlaceholder}
 								</option>
-								{PROFILE_TYPES.map((value) => (
+								{APPLICATION_CONTEXTS.map((value) => (
 									<option key={value} value={value}>
 										{PROFILE_TYPE_LABELS[value]}
 									</option>
