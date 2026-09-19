@@ -312,7 +312,6 @@ export const messages = {
 		baseIdentity: "Base Identity",
 		baseIdentityHint: "Your Base Identity details.",
 		contextProfileHint: "{type} Contextual Profile",
-		suggested: "Suggested",
 		notProvided: "Not provided",
 		sourceDefault: "Base Identity",
 		sourceProfile: "From {profile}",

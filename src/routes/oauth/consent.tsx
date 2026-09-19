@@ -1,7 +1,7 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Pencil } from "lucide-react";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { getSession } from "#/lib/auth.functions";
 import {
@@ -45,13 +45,24 @@ function getErrorMessage(err: unknown, fallbackMessage: string): string {
 }
 
 function ConsentPage() {
+	const routerSearch = useRouterState({
+		select: (state) => state.location.searchStr,
+	});
+
+	const rawSearchQuery =
+		typeof window === "undefined" ? routerSearch : window.location.search;
+
+	const oauthQuery = rawSearchQuery.startsWith("?") ? rawSearchQuery.slice(1) : rawSearchQuery;
+
+	return <ConsentRequest key={oauthQuery} oauthQuery={oauthQuery} />;
+}
+
+function ConsentRequest({ oauthQuery }: { oauthQuery: string }) {
 	const getPreviewFn = useServerFn(getConsentPreview);
 	const approveGrantFn = useServerFn(approveConsentGrant);
 	const rejectGrantFn = useServerFn(rejectConsentGrant);
-	const sourceGroupId = useId();
-
-	const rawSearch = typeof window !== "undefined" ? window.location.search : "";
-	const oauthQuery = rawSearch.startsWith("?") ? rawSearch.slice(1) : rawSearch;
+	const sourceSelectId = useId();
+	const hasAppliedSuggestedProfile = useRef(false);
 
 	const [preview, setPreview] = useState<ConsentPreviewResult | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -90,13 +101,20 @@ function ConsentPage() {
 							selectedProfileId === "default" ? null : selectedProfileId,
 					},
 				});
-				if (!cancelled) setPreview(result);
+				if (cancelled) return;
+				if (!hasAppliedSuggestedProfile.current && result.suggestedProfileId) {
+					hasAppliedSuggestedProfile.current = true;
+					setSelectedProfileId(result.suggestedProfileId);
+					return;
+				}
+				hasAppliedSuggestedProfile.current = true;
+				setPreview(result);
+				setLoading(false);
 			} catch (err) {
 				if (!cancelled) {
 					setError(getErrorMessage(err, messages.consent.errorBody));
+					setLoading(false);
 				}
-			} finally {
-				if (!cancelled) setLoading(false);
 			}
 		})();
 
@@ -230,7 +248,7 @@ function ConsentPage() {
 				</div>
 			</header>
 
-			{loading ? (
+			{loading && !preview ? (
 				<output className="text-center text-sm text-sea-ink-soft">
 					{messages.consent.loading}
 				</output>
@@ -245,7 +263,10 @@ function ConsentPage() {
 			) : preview ? (
 				<>
 					{hasRequestedAttributes ? (
-						<section className="grid gap-3 rounded-2xl border border-line bg-bg-surface p-5">
+						<section
+							className="grid gap-3 rounded-2xl border border-line bg-bg-surface p-5"
+							aria-busy={loading}
+						>
 							<div>
 								<h2
 									id="requested-heading"
@@ -258,34 +279,29 @@ function ConsentPage() {
 								</p>
 							</div>
 
-							<fieldset className="grid gap-2">
-								<legend className="text-sm font-semibold text-sea-ink">
+							<div className="grid gap-2">
+								<label
+									htmlFor={sourceSelectId}
+									className="text-sm font-semibold text-sea-ink"
+								>
 									{messages.consent.sourceHeading}
-								</legend>
-								<SourceOption
-									name={sourceGroupId}
-									value="default"
-									label={messages.consent.baseIdentity}
-									hint={messages.consent.baseIdentityHint}
-									checked={selectedProfileId === "default"}
-									onSelect={() => setSelectedProfileId("default")}
-								/>
-								{preview.profiles.map((profile) => (
-									<SourceOption
-										key={profile.id}
-										name={sourceGroupId}
-										value={profile.id}
-										label={profile.name}
-										hint={messages.consent.contextProfileHint.replace(
-											"{type}",
-											PROFILE_TYPE_LABELS[profile.type],
-										)}
-										suggested={profile.id === preview.suggestedProfileId}
-										checked={selectedProfileId === profile.id}
-										onSelect={() => setSelectedProfileId(profile.id)}
-									/>
-								))}
-							</fieldset>
+								</label>
+								<select
+									id={sourceSelectId}
+									value={selectedProfileId}
+									onChange={(event) => setSelectedProfileId(event.target.value)}
+									className="w-full rounded-lg border border-line bg-bg-surface px-3.5 py-2.5 pr-9 text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+								>
+									<option value="default">
+										{messages.consent.baseIdentity}
+									</option>
+									{preview.profiles.map((profile) => (
+										<option key={profile.id} value={profile.id}>
+											{`${profile.name} (${PROFILE_TYPE_LABELS[profile.type]})`}
+										</option>
+									))}
+								</select>
+							</div>
 
 							<div>
 								<h3 className="mt-1 text-sm font-semibold text-sea-ink">
@@ -356,60 +372,6 @@ function ConsentPage() {
 						</button>
 					</div>
 				</>
-			) : null}
-		</div>
-	);
-}
-
-function SourceOption({
-	name,
-	value,
-	label,
-	hint,
-	suggested = false,
-	checked,
-	onSelect,
-}: {
-	name: string;
-	value: string;
-	label: string;
-	hint: string;
-	suggested?: boolean;
-	checked: boolean;
-	onSelect: () => void;
-}) {
-	const id = `${name}-${value}`;
-	return (
-		<div
-			className={cn(
-				"flex items-center justify-between gap-3 rounded-lg border p-3",
-				checked ? "border-lagoon bg-lagoon/5" : "border-line bg-bg-base/40",
-			)}
-		>
-			<label
-				htmlFor={id}
-				className="flex min-w-0 flex-1 cursor-pointer items-center gap-3"
-			>
-				<input
-					id={id}
-					type="radio"
-					name={name}
-					value={value}
-					checked={checked}
-					onChange={onSelect}
-					className="size-4 accent-lagoon-deep"
-				/>
-				<span className="min-w-0">
-					<span className="block truncate text-sm font-semibold text-sea-ink">
-						{label}
-					</span>
-					<span className="block text-xs text-sea-ink-soft">{hint}</span>
-				</span>
-			</label>
-			{suggested ? (
-				<span className="shrink-0 rounded-full bg-lagoon/15 px-2 py-0.5 text-xs font-semibold text-lagoon-deep">
-					{messages.consent.suggested}
-				</span>
 			) : null}
 		</div>
 	);
