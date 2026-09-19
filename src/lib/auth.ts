@@ -5,7 +5,6 @@ import { jwt } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
 import { db } from "#/db";
-import { identityAttributes } from "#/db/schema";
 import {
 	getConsentBoundUserInfoClaims,
 	suppressIdentityTokenClaims,
@@ -78,22 +77,6 @@ export const auth = betterAuth({
 							name: `${firstName} ${lastName}`,
 						},
 					};
-				},
-				after: async (user) => {
-					if (user.accountKind === "developer") return;
-					await db.insert(identityAttributes).values([
-						{ userId: user.id, key: "email", value: user.email },
-						{
-							userId: user.id,
-							key: "firstName",
-							value: String(user.firstName ?? ""),
-						},
-						{
-							userId: user.id,
-							key: "lastName",
-							value: String(user.lastName ?? ""),
-						},
-					]);
 				},
 			},
 		},
