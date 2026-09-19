@@ -165,6 +165,7 @@ function ConsentPage() {
 								selectedProfileId:
 									selectedProfileId === "default" ? null : selectedProfileId,
 								edits,
+								approvedKeys: preview?.requestedKeys ?? [],
 							},
 						})
 					: await rejectGrantFn({ data: { oauthQuery } });

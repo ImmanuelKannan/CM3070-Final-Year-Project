@@ -131,3 +131,38 @@ describe("applyEdits", () => {
 		expect(reverted[0]).toMatchObject({ source: "default", value: "a@b.c" });
 	});
 });
+
+describe("validateApprovedConsentGrant", () => {
+	test("doesn't allow unapproved field edits and unrequested approvals", () => {
+		const requestedKeys = getRequestedIdentityAttributeKeys([
+			"email",
+			"profile",
+		]);
+
+		expect(() =>
+			validateApprovedConsentGrant(requestedKeys, ["email", "bio"], {}),
+		).toThrow("Unrequested approved key: bio");
+
+		expect(() =>
+			validateApprovedConsentGrant(requestedKeys, ["email"], {
+				firstName: "Overridden",
+			}),
+		).toThrow("Unapproved edit for attribute: firstName");
+
+		const edits = validateApprovedConsentGrant(requestedKeys, ["email"], {
+			email: "edited@example.com",
+		});
+		const resolved = resolveConsentPreviewAttributes(
+			{ firstName: "Ada", email: "ada@example.com" },
+			null,
+			["email"],
+			edits,
+		);
+		expect(resolved).toHaveLength(1);
+		expect(resolved[0]).toMatchObject({
+			key: "email",
+			source: "override",
+			value: "edited@example.com",
+		});
+	});
+});

@@ -21,10 +21,11 @@ import {
 	normalizeScopes,
 	validateOauthQuery,
 } from "#/lib/consent-grants";
-import type {
-	ApproveConsentGrantInput,
-	ConsentDecisionResult,
-	RejectConsentGrantInput,
+import {
+	type ApproveConsentGrantInput,
+	type ConsentDecisionResult,
+	type RejectConsentGrantInput,
+	validateApprovedConsentGrant,
 } from "#/lib/consent-grants.functions";
 import {
 	getRequestedIdentityAttributeKeys,
@@ -32,7 +33,6 @@ import {
 } from "#/lib/consent-preview";
 import { getProfile } from "#/lib/contextual-profiles";
 import { getBaseIdentity } from "#/lib/identity";
-import { validateAttribute } from "#/lib/profile-catalogue";
 
 export type ApproveConsentGrantSession = {
 	user: {
@@ -122,25 +122,11 @@ export async function approveConsentGrant(
 
 	const scopes = (query.get("scope") ?? "").split(/\s+/).filter(Boolean);
 	const requestedIdentityDataKeys = getRequestedIdentityAttributeKeys(scopes);
-	const edits: Record<string, string> = {};
-
-	// Validates fields to be updated
-	for (const [key, value] of Object.entries(data.edits)) {
-		if (!requestedIdentityDataKeys.includes(key)) {
-			throw new APIError("BAD_REQUEST", {
-				message: `Unrequested edit for attribute: ${key}`,
-			});
-		}
-		const trimmed = value.trim();
-		if (!trimmed) continue;
-		const fieldError = validateAttribute(key, trimmed);
-		if (fieldError) {
-			throw new APIError("BAD_REQUEST", {
-				message: `Validation error for "${key}": ${fieldError}`,
-			});
-		}
-		edits[key] = trimmed;
-	}
+	const edits = validateApprovedConsentGrant(
+		requestedIdentityDataKeys,
+		data.approvedKeys,
+		data.edits,
+	);
 
 	const [[authClient], baseIdentity] = await Promise.all([
 		db
@@ -171,7 +157,7 @@ export async function approveConsentGrant(
 		resolveConsentPreviewAttributes(
 			baseIdentity,
 			profileOverrides,
-			requestedIdentityDataKeys,
+			data.approvedKeys,
 			edits,
 		).map(({ key, value }) => [key, value]),
 	);

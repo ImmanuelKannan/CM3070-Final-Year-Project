@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { APIError } from "better-auth/api";
 import { z } from "zod";
 
+import { validateAttribute } from "#/lib/profile-catalogue";
+
 const oauthQuerySchema = z
 	.string({ error: "Authorization request is required" })
 	.trim()
@@ -11,6 +13,7 @@ export const approveConsentGrantInputSchema = z.strictObject({
 	oauthQuery: oauthQuerySchema,
 	selectedProfileId: z.string().nullable(),
 	edits: z.record(z.string(), z.string()),
+	approvedKeys: z.array(z.string()),
 });
 
 export type ApproveConsentGrantInput = z.infer<
@@ -46,6 +49,39 @@ export function normalizeApproveConsentGrantInput(input: unknown) {
 
 export function normalizeRejectConsentGrantInput(input: unknown) {
 	return parseConsentInput(rejectConsentGrantInputSchema, input);
+}
+
+export function validateApprovedConsentGrant(
+	requestedKeys: readonly string[],
+	approvedKeys: readonly string[],
+	edits: Record<string, string>,
+): Record<string, string> {
+	for (const key of approvedKeys) {
+		if (!requestedKeys.includes(key)) {
+			throw new APIError("BAD_REQUEST", {
+				message: `Unrequested approved key: ${key}`,
+			});
+		}
+	}
+
+	const normalizedEdits: Record<string, string> = {};
+	for (const [key, value] of Object.entries(edits)) {
+		if (!approvedKeys.includes(key)) {
+			throw new APIError("BAD_REQUEST", {
+				message: `Unapproved edit for attribute: ${key}`,
+			});
+		}
+		const trimmedValue = value.trim();
+		if (!trimmedValue) continue;
+		const fieldError = validateAttribute(key, trimmedValue);
+		if (fieldError) {
+			throw new APIError("BAD_REQUEST", {
+				message: `Validation error for "${key}": ${fieldError}`,
+			});
+		}
+		normalizedEdits[key] = trimmedValue;
+	}
+	return normalizedEdits;
 }
 
 export const approveConsentGrant = createServerFn({ method: "POST" })
