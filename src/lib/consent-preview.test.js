@@ -1,21 +1,22 @@
 import { describe, expect, test } from "bun:test";
 
+import { validateApprovedConsentGrant } from "./consent-grants.functions";
 import {
-	applyEdits,
-	parseRequestedAttributeKeys,
-	resolvePreview,
+	applyOverriddenAttributes,
+	getRequestedIdentityAttributeKeys,
+	resolveConsentPreviewAttributes,
 } from "./consent-preview";
 
-describe("parseRequestedAttributeKeys", () => {
+describe("getRequestedIdentityAttributeKeys", () => {
 	test("maps standard scopes and passes through custom attribute keys", () => {
-		expect(parseRequestedAttributeKeys(["email", "address"])).toEqual([
+		expect(getRequestedIdentityAttributeKeys(["email", "address"])).toEqual([
 			"email",
 			"address",
 		]);
 	});
 
 	test("expands the profile scope into identity name/picture attributes", () => {
-		const keys = parseRequestedAttributeKeys(["profile"]);
+		const keys = getRequestedIdentityAttributeKeys(["profile"]);
 		expect(keys).toContain("firstName");
 		expect(keys).toContain("lastName");
 		expect(keys).toContain("displayName");
@@ -23,14 +24,14 @@ describe("parseRequestedAttributeKeys", () => {
 	});
 
 	test("openid and offline_access map to no attributes", () => {
-		expect(parseRequestedAttributeKeys(["openid", "offline_access"])).toEqual(
-			[],
-		);
+		expect(
+			getRequestedIdentityAttributeKeys(["openid", "offline_access"]),
+		).toEqual([]);
 	});
 
 	test("deduplicates while preserving request order", () => {
 		expect(
-			parseRequestedAttributeKeys(["address", "profile", "address"]),
+			getRequestedIdentityAttributeKeys(["address", "profile", "address"]),
 		).toEqual([
 			"address",
 			"profilePicture",
@@ -43,13 +44,13 @@ describe("parseRequestedAttributeKeys", () => {
 	});
 
 	test("rejects unknown scopes", () => {
-		expect(() => parseRequestedAttributeKeys(["name", "address"])).toThrow(
-			"Unknown scope: name",
-		);
+		expect(() =>
+			getRequestedIdentityAttributeKeys(["name", "address"]),
+		).toThrow("Unknown scope: name");
 	});
 });
 
-describe("resolvePreview", () => {
+describe("resolveConsentPreviewAttributes", () => {
 	const base = {
 		firstName: "Ada",
 		lastName: "Lovelace",
@@ -58,7 +59,10 @@ describe("resolvePreview", () => {
 	};
 
 	test("returns only requested keys, sourced from Base Identity", () => {
-		const result = resolvePreview(base, null, ["firstName", "email"]);
+		const result = resolveConsentPreviewAttributes(base, null, [
+			"firstName",
+			"email",
+		]);
 		expect(result).toHaveLength(2);
 		expect(result[0]).toMatchObject({
 			key: "firstName",
@@ -71,7 +75,7 @@ describe("resolvePreview", () => {
 	});
 
 	test("non-blank profile overrides win over Base Identity", () => {
-		const result = resolvePreview(
+		const result = resolveConsentPreviewAttributes(
 			base,
 			{ email: "work@example.com", firstName: "" },
 			["firstName", "email"],
@@ -89,7 +93,7 @@ describe("resolvePreview", () => {
 	});
 
 	test("consent-only edits override both base and profile values", () => {
-		const result = resolvePreview(
+		const result = resolveConsentPreviewAttributes(
 			base,
 			{ email: "work@example.com" },
 			["email", "bio"],
@@ -108,7 +112,7 @@ describe("resolvePreview", () => {
 	});
 
 	test("empty edits revert to the resolved source value", () => {
-		const result = resolvePreview(
+		const result = resolveConsentPreviewAttributes(
 			base,
 			{ email: "work@example.com" },
 			["email"],
@@ -121,13 +125,15 @@ describe("resolvePreview", () => {
 	});
 });
 
-describe("applyEdits", () => {
+describe("applyOverriddenAttributes", () => {
 	test("applies non-empty edits as overrides and ignores empty ones", () => {
-		const attrs = resolvePreview({ email: "a@b.c" }, null, ["email"]);
-		const edited = applyEdits(attrs, { email: "x@y.z" });
+		const attrs = resolveConsentPreviewAttributes({ email: "a@b.c" }, null, [
+			"email",
+		]);
+		const edited = applyOverriddenAttributes(attrs, { email: "x@y.z" });
 		expect(edited[0]).toMatchObject({ source: "override", value: "x@y.z" });
 
-		const reverted = applyEdits(attrs, { email: "" });
+		const reverted = applyOverriddenAttributes(attrs, { email: "" });
 		expect(reverted[0]).toMatchObject({ source: "default", value: "a@b.c" });
 	});
 });
