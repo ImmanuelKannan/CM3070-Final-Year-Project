@@ -139,36 +139,34 @@ describe("applyOverriddenAttributes", () => {
 });
 
 describe("validateApprovedConsentGrant", () => {
-	test("doesn't allow unapproved field edits and unrequested approvals", () => {
+	test("partial disclosure: approving a subset returns only that subset", () => {
 		const requestedKeys = getRequestedIdentityAttributeKeys([
 			"email",
-			"profile",
+			"firstName",
 		]);
+		const approvedKeys = ["email"];
 
-		expect(() =>
-			validateApprovedConsentGrant(requestedKeys, ["email", "bio"], {}),
-		).toThrow("Unrequested approved key: bio");
+		validateApprovedConsentGrant(requestedKeys, approvedKeys, {});
 
-		expect(() =>
-			validateApprovedConsentGrant(requestedKeys, ["email"], {
-				firstName: "Overridden",
-			}),
-		).toThrow("Unapproved edit for attribute: firstName");
-
-		const edits = validateApprovedConsentGrant(requestedKeys, ["email"], {
-			email: "edited@example.com",
-		});
 		const resolved = resolveConsentPreviewAttributes(
-			{ firstName: "Ada", email: "ada@example.com" },
+			{ email: "glados@aperturescience.com" },
 			null,
-			["email"],
-			edits,
+			approvedKeys,
 		);
-		expect(resolved).toHaveLength(1);
-		expect(resolved[0]).toMatchObject({
-			key: "email",
-			source: "override",
-			value: "edited@example.com",
-		});
+
+		expect(resolved.map((a) => a.key)).toEqual(["email"]);
+	});
+
+	test("rejects injected approvals and edits to unapproved attributes", () => {
+		const requestedKeys = getRequestedIdentityAttributeKeys(["email"]);
+
+		expect(() =>
+			validateApprovedConsentGrant(requestedKeys, ["address"], {}),
+		).toThrow("Unrequested approved key: address");
+		expect(() =>
+			validateApprovedConsentGrant(requestedKeys, [], {
+				email: "edited@example.com",
+			}),
+		).toThrow("Unapproved edit for attribute: email");
 	});
 });

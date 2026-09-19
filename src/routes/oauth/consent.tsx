@@ -66,6 +66,10 @@ function ConsentPage() {
 	const [editDraft, setEditDraft] = useState("");
 	const [editError, setEditError] = useState<string | null>(null);
 
+	const [excludedAttributes, setExcludedAttributes] = useState<Set<string>>(new Set());
+	const approvedKeys =
+		preview?.requestedKeys.filter((key) => !excludedAttributes.has(key)) ?? [];
+
 	useEffect(() => {
 		if (!oauthQuery) {
 			setError(messages.consent.errorBody);
@@ -121,6 +125,24 @@ function ConsentPage() {
 		setEditError(null);
 	};
 
+	const toggleAttributeInclusion = (key: string) => {
+		const wasIncluded = !excludedAttributes.has(key);
+		setExcludedAttributes((prev) => {
+			const next = new Set(prev);
+			if (wasIncluded) next.add(key);
+			else next.delete(key);
+			return next;
+		});
+		if (!wasIncluded) return;
+		setEdits((prev) => {
+			if (!(key in prev)) return prev;
+			const next = { ...prev };
+			delete next[key];
+			return next;
+		});
+		if (editingKey === key) cancelEditingField();
+	};
+
 	const saveEditedField = () => {
 		if (!editingKey) return;
 		const trimmed = editDraft.trim();
@@ -165,7 +187,7 @@ function ConsentPage() {
 								selectedProfileId:
 									selectedProfileId === "default" ? null : selectedProfileId,
 								edits,
-								approvedKeys: preview?.requestedKeys ?? [],
+								approvedKeys,
 							},
 						})
 					: await rejectGrantFn({ data: { oauthQuery } });
@@ -180,7 +202,12 @@ function ConsentPage() {
 
 	const clientName = preview?.client.name?.trim() || preview?.client.id || "";
 	const hasRequestedAttributes = (preview?.requestedKeys.length ?? 0) > 0;
-	const consentBlocked = loading || !!error || editingKey !== null;
+	const selectedAttributesCount = approvedKeys.length;
+	const isConsentBLocked =
+		loading ||
+		!!error ||
+		editingKey !== null ||
+		(hasRequestedAttributes && selectedAttributesCount === 0);
 
 	return (
 		<div className="mx-auto grid w-full max-w-lg gap-6 px-4">
@@ -200,11 +227,6 @@ function ConsentPage() {
 					<h1 className="font-display text-2xl font-bold text-sea-ink">
 						{clientName || messages.consent.title}
 					</h1>
-					{preview ? (
-						<p className="mt-1 text-sm text-sea-ink-soft">
-							{messages.consent.wantsAccess.replace("{client}", clientName)}
-						</p>
-					) : null}
 				</div>
 			</header>
 
@@ -232,7 +254,7 @@ function ConsentPage() {
 									{messages.consent.requestedHeading}
 								</h2>
 								<p className="mt-0.5 text-sm text-sea-ink-soft">
-									{messages.consent.requestedDetailsMessage}
+									{messages.consent.requestedDetailsMessage.replace("{client}", clientName)}
 								</p>
 							</div>
 
@@ -266,12 +288,11 @@ function ConsentPage() {
 							</fieldset>
 
 							<div>
-								<h3 className="text-sm font-semibold text-sea-ink">
-									{messages.consent.attributesHeading}
+								<h3 className="mt-1 text-sm font-semibold text-sea-ink">
+									{messages.consent.sharingCount
+										.replace("{selected}", String(selectedAttributesCount))
+										.replace("{total}", String(preview.requestedKeys.length))}
 								</h3>
-								<p className="mt-0.5 text-sm text-sea-ink-soft">
-									{messages.consent.requestedEditableHint}
-								</p>
 							</div>
 
 							<ul className="grid gap-1">
@@ -282,6 +303,8 @@ function ConsentPage() {
 										editing={editingKey === attr.key}
 										draft={editDraft}
 										editError={editError}
+										isIncluded={!excludedAttributes.has(attr.key)}
+										onToggleInclude={() => toggleAttributeInclusion(attr.key)}
 										onStartEdit={() => startEditingField(attr.key)}
 										onCancelEdit={cancelEditingField}
 										onSaveEdit={saveEditedField}
@@ -323,7 +346,7 @@ function ConsentPage() {
 						<button
 							type="button"
 							onClick={() => void handleDecision("approve")}
-							disabled={pendingDecision !== null || consentBlocked}
+							disabled={pendingDecision !== null || isConsentBLocked}
 							aria-busy={pendingDecision === "approve"}
 							className="inline-flex items-center justify-center rounded-lg bg-sea-ink px-4 py-2.5 font-semibold text-foam no-underline transition-colors hover:bg-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
 						>
@@ -397,6 +420,8 @@ function AttributeRow({
 	editing,
 	draft,
 	editError,
+	isIncluded,
+	onToggleInclude,
 	onStartEdit,
 	onCancelEdit,
 	onSaveEdit,
@@ -406,6 +431,8 @@ function AttributeRow({
 	editing: boolean;
 	draft: string;
 	editError: string | null;
+	isIncluded: boolean;
+	onToggleInclude: () => void;
 	onStartEdit: () => void;
 	onCancelEdit: () => void;
 	onSaveEdit: () => void;
@@ -419,12 +446,19 @@ function AttributeRow({
 	if (editing) {
 		return (
 			<li className="rounded-lg border border-lagoon bg-bg-base/40 p-3">
-				<label
-					htmlFor={inputId}
-					className="mb-1.5 block text-sm font-semibold text-sea-ink"
-				>
-					{attribute.label}
-				</label>
+				<div className="mb-1.5 flex items-center justify-between gap-2">
+					<label
+						htmlFor={inputId}
+						className="block text-sm font-semibold text-sea-ink"
+					>
+						{attribute.label}
+					</label>
+					<AttributeInclusionToggle
+						attribute={attribute}
+						isIncluded={isIncluded}
+						onToggleInclude={onToggleInclude}
+					/>
+				</div>
 				<div className="grid gap-2">
 					<EditInput
 						id={inputId}
@@ -467,22 +501,55 @@ function AttributeRow({
 	return (
 		<li className="flex items-center justify-between gap-3 px-3 py-2.5">
 			<div className="min-w-0">
-				<p className="text-sm font-semibold text-sea-ink">{attribute.label}</p>
+				<p className="truncate text-sm font-semibold text-sea-ink">
+					{attribute.label}
+				</p>
 				<p className={cn("truncate text-sm", empty && "text-sea-ink-soft")}>
 					{empty ? messages.consent.notProvided : attribute.value}
 				</p>
 			</div>
 			<div className="flex shrink-0 items-center gap-2">
-				<button
-					type="button"
-					onClick={onStartEdit}
-					className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-sea-ink transition-colors hover:bg-bg-base focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
-				>
-					<Pencil className="h-3.5 w-3.5" />
-					{messages.consent.edit}
-				</button>
+				<AttributeInclusionToggle
+					attribute={attribute}
+					isIncluded={isIncluded}
+					onToggleInclude={onToggleInclude}
+				/>
+				{isIncluded ? (
+					<button
+						type="button"
+						onClick={onStartEdit}
+						className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm font-semibold text-sea-ink transition-colors hover:bg-bg-base focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+					>
+						<Pencil className="h-3.5 w-3.5" />
+						{messages.consent.edit}
+					</button>
+				) : null}
 			</div>
 		</li>
+	);
+}
+
+function AttributeInclusionToggle({
+	attribute,
+	isIncluded,
+	onToggleInclude,
+}: {
+	attribute: PreviewAttribute;
+	isIncluded: boolean;
+	onToggleInclude: () => void;
+}) {
+	return (
+		<label className="inline-flex cursor-pointer items-center">
+			<input
+				type="checkbox"
+				checked={isIncluded}
+				onChange={onToggleInclude}
+				className="size-4 cursor-pointer accent-lagoon-deep"
+			/>
+			<span className="sr-only">
+				{messages.consent.shareLabel.replace("{label}", attribute.label)}
+			</span>
+		</label>
 	);
 }
 

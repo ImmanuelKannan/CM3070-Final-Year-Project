@@ -17,6 +17,7 @@ import type {
 	ConsentHistoryEvent,
 } from "#/lib/consent-history";
 import { getConsentHistory } from "#/lib/consent-history.functions";
+import { getRequestedIdentityAttributeKeys } from "#/lib/consent-preview";
 import { formatDateTime } from "#/lib/format-date";
 import { messages } from "#/lib/i18n";
 import { getLabelText } from "#/lib/permission-label";
@@ -348,6 +349,10 @@ function EventDetails({
 	event: ConsentHistoryEvent;
 	appName: string;
 }) {
+	const requestedAttributes =
+		event.type === "approved"
+			? getRequestedIdentityAttributeKeys(event.scopes)
+			: [];
 	return (
 		<dl className="grid gap-3 text-sm">
 			<DetailRow label={messages.history.appLabel}>
@@ -378,26 +383,36 @@ function EventDetails({
 				<EventTime value={event.createdAt} />
 			</DetailRow>
 			{event.type === "approved" ? (
-				<DetailRow label={messages.history.attributesLabel}>
-					{Object.keys(event.releasedAttributes).length > 0 ? (
+				<DetailRow label={messages.history.requestedAttributesLabel}>
+					{requestedAttributes.length > 0 ? (
 						<dl className="grid gap-2">
-							{Object.entries(event.releasedAttributes).map(([key, value]) => (
-								<div
-									key={key}
-									className="grid gap-0.5 border-t border-line first:border-t-0 first:pt-0 sm:grid-cols-[minmax(8rem,auto)_minmax(0,1fr)] sm:gap-3"
-								>
-									<dt className="text-sea-ink-soft">
-										{ATTRIBUTE_LABELS[key] ?? key}
-									</dt>
-									<dd className="break-words font-semibold text-sea-ink">
-										{value}
-									</dd>
-								</div>
-							))}
+							{requestedAttributes.map((key) => {
+								const value = event.releasedAttributes[key];
+								const shared = value !== undefined;
+								return (
+									<div
+										key={key}
+										className="grid gap-0.5 border-t border-line first:border-t-0 first:pt-0 sm:grid-cols-[minmax(8rem,auto)_minmax(0,1fr)] sm:gap-3"
+									>
+										<dt className="text-sea-ink-soft">
+											{ATTRIBUTE_LABELS[key] ?? key}
+										</dt>
+										<dd
+											className={
+												shared
+													? "break-words font-semibold text-sea-ink"
+													: "text-sea-ink-soft"
+											}
+										>
+											{shared ? value : messages.history.notShared}
+										</dd>
+									</div>
+								);
+							})}
 						</dl>
 					) : (
 						<span className="text-sea-ink-soft">
-							{messages.history.noAttributes}
+							{messages.history.emptyRequestedAttributes}
 						</span>
 					)}
 				</DetailRow>
