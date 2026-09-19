@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { auth } from "#/lib/auth";
 import {
+	ALLOWED_ATTRIBUTE_KEYS,
 	APPLICATION_CONTEXTS,
 	type ApplicationContext,
 } from "#/lib/profile-catalogue";
@@ -14,10 +15,23 @@ const redirectUrisSchema = z
 	.array(z.url("Redirect URL must be a valid URL"))
 	.min(1);
 
+const requestedAttributeDataSchema = z
+	.array(z.string())
+	.min(1, "Select at least one identity attribute")
+	.refine(
+		(keys) => new Set(keys).size === keys.length,
+		"Identity attribute keys must be unique",
+	)
+	.refine(
+		(keys) => keys.every((key) => ALLOWED_ATTRIBUTE_KEYS.includes(key)),
+		"Unknown identity attribute",
+	);
+
 export const createOAuthClientInputSchema = z.strictObject({
 	name: clientNameSchema,
 	profileType: z.enum(APPLICATION_CONTEXTS),
 	redirectUris: redirectUrisSchema,
+	requestedAttributeData: requestedAttributeDataSchema,
 });
 
 export type CreateOAuthClientInput = z.infer<
@@ -29,19 +43,24 @@ export type OAuthClientSummary = {
 	client_id: string;
 	client_name?: string;
 	redirect_uris: string[];
+	requested_attribute_data: string[];
 	metadata?: { profileType: ApplicationContext };
 };
 
 function toOAuthClientSummary(
-	client: Pick<OAuthClient, "client_id" | "client_name" | "redirect_uris"> & {
-		profileType?: unknown;
-	},
+	client: Pick<
+		OAuthClient,
+		"client_id" | "client_name" | "redirect_uris" | "scope"
+	> & { profileType?: unknown },
 ): OAuthClientSummary {
 	const profileType = client.profileType;
 	const clientSummary: OAuthClientSummary = {
 		client_id: client.client_id,
 		client_name: client.client_name,
 		redirect_uris: client.redirect_uris,
+		requested_attribute_data: (client.scope ?? "")
+			.split(" ")
+			.filter((key) => key !== "" && key !== "openid"),
 	};
 	if (
 		typeof profileType === "string" &&
@@ -85,6 +104,7 @@ export async function createOAuthClient(headers: Headers, input: unknown) {
 		body: {
 			client_name: validatedInput.name,
 			redirect_uris: validatedInput.redirectUris,
+			scope: ["openid", ...validatedInput.requestedAttributeData].join(" "),
 			token_endpoint_auth_method: "client_secret_basic",
 			grant_types: ["authorization_code"],
 			response_types: ["code"],

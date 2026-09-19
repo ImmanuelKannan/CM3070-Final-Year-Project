@@ -221,6 +221,8 @@ export const messages = {
 			"https://example.com/callback\nhttps://example.com/oauth/callback",
 		redirectUrisHint: "Enter one redirect URL per line.",
 		redirectUrisRequired: "At least one redirect URL is required.",
+		identityAttributeSelectLabel: "Requested identity attributes",
+		identityAttributesSelectPlaceholder: "Select identity data...",
 		createClient: "Create client",
 		creatingClient: "Creating client…",
 		createErrorHeading: "We couldn't create that OAuth client",

@@ -2,6 +2,7 @@ import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { type FormEvent, useId, useState } from "react";
 
+import {  MultiselectAttribute } from "#/components/multiselect-attribute";
 import { messages } from "#/lib/i18n";
 import type {
 	OAuthClientProfileType,
@@ -14,6 +15,7 @@ import {
 } from "#/lib/oauth-clients.functions";
 import {
 	APPLICATION_CONTEXTS,
+	ATTRIBUTE_LABELS,
 	PROFILE_TYPE_LABELS,
 } from "#/lib/profile-catalogue";
 
@@ -104,6 +106,7 @@ function DeveloperPage() {
 		"",
 	);
 	const [redirectUris, setRedirectUris] = useState("");
+	const [requestedAttributeData, setRequestedAttributeData] = useState<string[]>([]);
 	const [formErrors, setFormErrors] = useState<
 		Partial<Record<FormField, string>>
 	>({});
@@ -149,7 +152,6 @@ function DeveloperPage() {
 		if (redirectUriList.length === 0) {
 			nextErrors.redirectUris = messages.developer.redirectUrisRequired;
 		}
-
 		if (Object.keys(nextErrors).length > 0) {
 			setFormErrors(nextErrors);
 			return;
@@ -164,6 +166,7 @@ function DeveloperPage() {
 					name: name.trim(),
 					profileType: profileType as OAuthClientProfileType,
 					redirectUris: redirectUriList,
+					requestedAttributeData,
 				},
 			});
 			const { client_secret, ...clientSummary } = created;
@@ -177,6 +180,7 @@ function DeveloperPage() {
 			setName("");
 			setProfileType("");
 			setRedirectUris("");
+			setRequestedAttributeData([]);
 			setFormErrors({});
 		} catch (error) {
 			setCreateError(
@@ -349,6 +353,13 @@ function DeveloperPage() {
 									{formErrors.redirectUris}
 								</p>
 							) : null}
+						</div>
+
+						<div className="grid gap-1.5 sm:col-span-2">
+							<MultiselectAttribute
+								value={requestedAttributeData}
+								onValueChange={setRequestedAttributeData}
+							/>
 						</div>
 					</div>
 
@@ -537,6 +548,20 @@ function ClientRow({
 									className="break-all font-mono text-sm text-sea-ink"
 								>
 									{uri}
+								</li>
+							))}
+						</ul>
+					</dd>
+				</div>
+				<div className="min-w-0 sm:col-span-2">
+					<dt className="text-xs font-semibold uppercase text-sea-ink-soft">
+						{messages.developer.identityAttributeSelectLabel}
+					</dt>
+					<dd>
+						<ul className="mt-1 grid gap-1">
+							{client.requested_attribute_data.map((key) => (
+								<li key={key} className="text-sm text-sea-ink">
+									{ATTRIBUTE_LABELS[key] ?? key}
 								</li>
 							))}
 						</ul>
