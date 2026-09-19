@@ -1,0 +1,2 @@
+ALTER TABLE "contextual_profiles" DROP CONSTRAINT "contextual_profiles_type_check";--> statement-breakpoint
+ALTER TABLE "contextual_profiles" ADD CONSTRAINT "contextual_profiles_type_check" CHECK ("contextual_profiles"."type" in ('social', 'banking', 'school', 'employment', 'healthcare', 'government', 'others'));

@@ -61,7 +61,7 @@ export const contextualProfiles = pgTable(
 		),
 		check(
 			"contextual_profiles_type_check",
-			sql`${table.type} in ('social', 'banking', 'school', 'others')`,
+			sql`${table.type} in ('social', 'banking', 'school', 'employment', 'healthcare', 'government', 'others')`,
 		),
 		index("contextual_profiles_user_id_idx").on(table.userId),
 	],
