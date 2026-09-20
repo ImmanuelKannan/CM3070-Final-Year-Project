@@ -68,7 +68,7 @@ const CONSENT_HISTORY_EVENT_CONFIG: Record<
 export const Route = createFileRoute("/_authenticated/history")({
 	beforeLoad: ({ context }) => {
 		if (context.session.user.accountKind !== "identity_holder") {
-			throw redirect({ to: "/developer" });
+			throw redirect({ to: "/" });
 		}
 	},
 	validateSearch: z.object({

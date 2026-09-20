@@ -11,7 +11,7 @@ import { messages } from "#/lib/i18n";
 
 export const Route = createFileRoute("/sign-up/identity-holder")({
 	beforeLoad: async () => {
-		if (await getSession()) throw redirect({ to: "/profiles" });
+		if (await getSession()) throw redirect({ to: "/" });
 	},
 	component: IdentityHolderSignUp,
 });
@@ -63,7 +63,7 @@ function IdentityHolderSignUp() {
 			} | null;
 			if (resumed?.redirect && resumed?.url) return;
 
-			window.location.assign("/profiles");
+			window.location.assign("/");
 		} catch {
 			setError(messages.auth.signUp.errorBody);
 		} finally {

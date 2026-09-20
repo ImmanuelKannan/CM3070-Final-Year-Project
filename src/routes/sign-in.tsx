@@ -13,10 +13,7 @@ export const Route = createFileRoute("/sign-in")({
 	beforeLoad: async () => {
 		const session = await getSession();
 		if (session) {
-			throw redirect({
-				to:
-					session.user.accountKind === "developer" ? "/developer" : "/profiles",
-			});
+			throw redirect({ to: "/" });
 		}
 	},
 	component: SignIn,
@@ -54,12 +51,7 @@ function SignIn() {
 
 			if (data?.redirect && data?.url) return;
 
-			const session = await authClient.getSession();
-			window.location.assign(
-				session.data?.user.accountKind === "developer"
-					? "/developer"
-					: "/profiles",
-			);
+			window.location.assign("/");
 		} catch {
 			setError(messages.auth.signIn.errorBody);
 		} finally {

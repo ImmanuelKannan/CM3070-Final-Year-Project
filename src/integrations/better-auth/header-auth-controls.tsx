@@ -80,7 +80,7 @@ export function HeaderAuthControls() {
 			<div className="grid justify-items-end gap-1">
 				<div className="flex items-center gap-2">
 					<Link
-						to="/dashboard"
+						to="/"
 						aria-label={messages.nav.dashboard}
 						className="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 font-semibold text-sea-ink no-underline hover:bg-lagoon/10 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 					>

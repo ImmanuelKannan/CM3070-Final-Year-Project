@@ -31,7 +31,7 @@ export const Route = createFileRoute(
 )({
 	beforeLoad: ({ context }) => {
 		if (context.session.user.accountKind !== "identity_holder") {
-			throw redirect({ to: "/developer" });
+			throw redirect({ to: "/" });
 		}
 	},
 	loader: async ({ params }) => {

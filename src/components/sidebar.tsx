@@ -7,7 +7,7 @@ import { authClient } from "#/lib/auth-client";
 import { messages } from "#/lib/i18n";
 
 type NavItem = {
-	to: "/profiles" | "/history" | "/authorized-apps" | "/developer";
+	to: "/" | "/history" | "/authorized-apps";
 	label: string;
 	icon: LucideIcon;
 	kind: "identity_holder" | "developer";
@@ -15,7 +15,7 @@ type NavItem = {
 
 const NAV_ITEMS: readonly NavItem[] = [
 	{
-		to: "/profiles",
+		to: "/",
 		label: messages.nav.profiles,
 		icon: Users,
 		kind: "identity_holder",
@@ -33,7 +33,7 @@ const NAV_ITEMS: readonly NavItem[] = [
 		kind: "identity_holder",
 	},
 	{
-		to: "/developer",
+		to: "/",
 		label: messages.nav.developer,
 		icon: Code2,
 		kind: "developer",
@@ -83,7 +83,7 @@ export function Sidebar() {
 			aria-label={messages.sidebar.menuLabel}
 			className="flex w-full shrink-0 flex-col gap-4 overflow-y-auto border-b border-line bg-bg-surface px-4 py-4 md:h-full md:w-64 md:gap-0 md:border-b-0 md:border-r md:px-0 md:py-0"
 		>
-			<SidebarBrand accountKind={accountKind} />
+			<SidebarBrand />
 			<SidebarNav items={navItems} />
 			<SidebarAccount
 				name={userName}
@@ -99,10 +99,10 @@ export function Sidebar() {
 	);
 }
 
-function SidebarBrand({ accountKind }: { accountKind?: string }) {
+function SidebarBrand() {
 	return (
 		<Link
-			to={accountKind === "developer" ? "/developer" : "/profiles"}
+			to="/"
 			className="inline-flex items-center gap-2.5 font-extrabold tracking-tight text-sea-ink no-underline hover:text-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring md:border-b md:border-line md:px-5 md:py-4"
 			aria-label={messages.nav.brandLabel}
 		>
@@ -141,7 +141,7 @@ function SidebarNavLink({ item }: { item: NavItem }) {
 	return (
 		<Link
 			to={item.to}
-			activeOptions={{ exact: item.to === "/profiles" }}
+			activeOptions={{ exact: item.to === "/" }}
 			className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-sea-ink-soft no-underline transition-colors hover:bg-lagoon/10 hover:text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring aria-[current=page]:bg-lagoon/20 aria-[current=page]:text-sea-ink md:py-2.5"
 		>
 			<Icon className="size-4" aria-hidden="true" />

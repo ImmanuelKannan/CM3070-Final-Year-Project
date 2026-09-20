@@ -1,8 +1,8 @@
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { type FormEvent, useId, useState } from "react";
 
-import {  MultiselectAttribute } from "#/components/multiselect-attribute";
+import { MultiselectAttribute } from "#/components/multiselect-attribute";
 import { messages } from "#/lib/i18n";
 import type {
 	OAuthClientProfileType,
@@ -11,25 +11,12 @@ import type {
 import {
 	createOAuthClientFn,
 	deleteOAuthClientFn,
-	listOAuthClientsFn,
 } from "#/lib/oauth-clients.functions";
 import {
 	APPLICATION_CONTEXTS,
 	ATTRIBUTE_LABELS,
 	PROFILE_TYPE_LABELS,
 } from "#/lib/profile-catalogue";
-
-export const Route = createFileRoute("/_authenticated/developer")({
-	beforeLoad: ({ context }) => {
-		if (context.session.user.accountKind !== "developer") {
-			throw redirect({ to: "/profiles" });
-		}
-	},
-	loader: async () => ({ clients: await listOAuthClientsFn() }),
-	pendingComponent: DeveloperPending,
-	errorComponent: DeveloperError,
-	component: DeveloperPage,
-});
 
 type ClientCredentials = {
 	clientId: string;
@@ -59,7 +46,7 @@ function DeveloperHeader() {
 	);
 }
 
-function DeveloperPending() {
+export function DeveloperPending() {
 	return (
 		<div className="mx-auto grid w-full max-w-5xl gap-8 px-4 sm:gap-12">
 			<DeveloperHeader />
@@ -70,7 +57,7 @@ function DeveloperPending() {
 	);
 }
 
-function DeveloperError() {
+export function DeveloperError() {
 	const router = useRouter();
 
 	return (
@@ -95,8 +82,11 @@ function DeveloperError() {
 	);
 }
 
-function DeveloperPage() {
-	const { clients: initialClients } = Route.useLoaderData();
+export function DeveloperPage({
+	initialClients,
+}: {
+	initialClients: OAuthClientSummary[];
+}) {
 	const createOauthClient = useServerFn(createOAuthClientFn);
 	const deleteOauthClient = useServerFn(deleteOAuthClientFn);
 
@@ -106,7 +96,9 @@ function DeveloperPage() {
 		"",
 	);
 	const [redirectUris, setRedirectUris] = useState("");
-	const [requestedAttributeData, setRequestedAttributeData] = useState<string[]>([]);
+	const [requestedAttributeData, setRequestedAttributeData] = useState<
+		string[]
+	>([]);
 	const [formErrors, setFormErrors] = useState<
 		Partial<Record<FormField, string>>
 	>({});

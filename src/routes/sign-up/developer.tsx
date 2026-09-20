@@ -11,7 +11,7 @@ import { messages } from "#/lib/i18n";
 
 export const Route = createFileRoute("/sign-up/developer")({
 	beforeLoad: async () => {
-		if (await getSession()) throw redirect({ to: "/developer" });
+		if (await getSession()) throw redirect({ to: "/" });
 	},
 	component: DeveloperSignUp,
 });
@@ -56,7 +56,7 @@ function DeveloperSignUp() {
 			} | null;
 			if (resumed?.redirect && resumed?.url) return;
 
-			window.location.assign("/developer");
+			window.location.assign("/");
 		} catch {
 			setError(messages.auth.signUp.errorBody);
 		} finally {

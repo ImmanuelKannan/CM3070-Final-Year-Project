@@ -6,10 +6,7 @@ export const Route = createFileRoute("/sign-up/")({
 	beforeLoad: async () => {
 		const session = await getSession();
 		if (session) {
-			throw redirect({
-				to:
-					session.user.accountKind === "developer" ? "/developer" : "/profiles",
-			});
+			throw redirect({ to: "/" });
 		}
 	},
 	component: SignUpChooser,

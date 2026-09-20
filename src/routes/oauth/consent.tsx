@@ -29,7 +29,7 @@ export const Route = createFileRoute("/oauth/consent")({
 		const session = await getSession();
 		if (!session) throw redirect({ to: "/sign-in" });
 		if (session.user.accountKind !== "identity_holder") {
-			throw redirect({ to: "/developer" });
+			throw redirect({ to: "/" });
 		}
 	},
 	validateSearch: () => ({}),

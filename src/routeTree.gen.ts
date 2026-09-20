@@ -9,13 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as DotwellKnownOauthAuthorizationServerRouteImport } from './routes/[.]well-known/oauth-authorization-server'
 import { Route as DotwellKnownOpenidConfigurationRouteImport } from './routes/[.]well-known/openid-configuration'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedDeveloperRouteImport } from './routes/_authenticated/developer'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
 import { Route as ApiProfilePictureRouteImport } from './routes/api/profile-picture'
@@ -27,11 +25,6 @@ import { Route as AuthenticatedAuthorizedAppsIndexRouteImport } from './routes/_
 import { Route as AuthenticatedAuthorizedAppsClientIdRouteImport } from './routes/_authenticated/authorized-apps.$clientId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -53,14 +46,9 @@ const DotwellKnownOpenidConfigurationRoute =
     path: '/.well-known/openid-configuration',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedDeveloperRoute = AuthenticatedDeveloperRouteImport.update({
-  id: '/developer',
-  path: '/developer',
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
@@ -117,12 +105,10 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AuthenticatedIndexRoute
   '/sign-in': typeof SignInRoute
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/.well-known/openid-configuration': typeof DotwellKnownOpenidConfigurationRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
-  '/developer': typeof AuthenticatedDeveloperRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/api/profile-picture': typeof ApiProfilePictureRoute
@@ -135,18 +121,16 @@ export interface FileRoutesByFullPath {
   '/authorized-apps/': typeof AuthenticatedAuthorizedAppsIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/.well-known/openid-configuration': typeof DotwellKnownOpenidConfigurationRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
-  '/developer': typeof AuthenticatedDeveloperRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/api/profile-picture': typeof ApiProfilePictureRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/sign-up/developer': typeof SignUpDeveloperRoute
   '/sign-up/identity-holder': typeof SignUpIdentityHolderRoute
+  '/': typeof AuthenticatedIndexRoute
   '/sign-up': typeof SignUpIndexRoute
   '/authorized-apps/$clientId': typeof AuthenticatedAuthorizedAppsClientIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -154,19 +138,17 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/.well-known/openid-configuration': typeof DotwellKnownOpenidConfigurationRoute
-  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/developer': typeof AuthenticatedDeveloperRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/profiles': typeof AuthenticatedProfilesRoute
   '/api/profile-picture': typeof ApiProfilePictureRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/sign-up/developer': typeof SignUpDeveloperRoute
   '/sign-up/identity-holder': typeof SignUpIdentityHolderRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
   '/sign-up/': typeof SignUpIndexRoute
   '/_authenticated/authorized-apps/$clientId': typeof AuthenticatedAuthorizedAppsClientIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -179,8 +161,6 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/.well-known/oauth-authorization-server'
     | '/.well-known/openid-configuration'
-    | '/dashboard'
-    | '/developer'
     | '/history'
     | '/profiles'
     | '/api/profile-picture'
@@ -193,37 +173,33 @@ export interface FileRouteTypes {
     | '/authorized-apps/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/sign-in'
     | '/.well-known/oauth-authorization-server'
     | '/.well-known/openid-configuration'
-    | '/dashboard'
-    | '/developer'
     | '/history'
     | '/profiles'
     | '/api/profile-picture'
     | '/oauth/consent'
     | '/sign-up/developer'
     | '/sign-up/identity-holder'
+    | '/'
     | '/sign-up'
     | '/authorized-apps/$clientId'
     | '/api/auth/$'
     | '/authorized-apps'
   id:
     | '__root__'
-    | '/'
     | '/_authenticated'
     | '/sign-in'
     | '/.well-known/oauth-authorization-server'
     | '/.well-known/openid-configuration'
-    | '/_authenticated/dashboard'
-    | '/_authenticated/developer'
     | '/_authenticated/history'
     | '/_authenticated/profiles'
     | '/api/profile-picture'
     | '/oauth/consent'
     | '/sign-up/developer'
     | '/sign-up/identity-holder'
+    | '/_authenticated/'
     | '/sign-up/'
     | '/_authenticated/authorized-apps/$clientId'
     | '/api/auth/$'
@@ -231,7 +207,6 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   SignInRoute: typeof SignInRoute
   DotwellKnownOauthAuthorizationServerRoute: typeof DotwellKnownOauthAuthorizationServerRoute
@@ -246,13 +221,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -281,18 +249,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotwellKnownOpenidConfigurationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/developer': {
-      id: '/_authenticated/developer'
-      path: '/developer'
-      fullPath: '/developer'
-      preLoaderRoute: typeof AuthenticatedDeveloperRouteImport
+    '/_authenticated/': {
+      id: '/_authenticated/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/history': {
@@ -369,19 +330,17 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedDeveloperRoute: typeof AuthenticatedDeveloperRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedProfilesRoute: typeof AuthenticatedProfilesRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAuthorizedAppsClientIdRoute: typeof AuthenticatedAuthorizedAppsClientIdRoute
   AuthenticatedAuthorizedAppsIndexRoute: typeof AuthenticatedAuthorizedAppsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedDeveloperRoute: AuthenticatedDeveloperRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedProfilesRoute: AuthenticatedProfilesRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAuthorizedAppsClientIdRoute:
     AuthenticatedAuthorizedAppsClientIdRoute,
   AuthenticatedAuthorizedAppsIndexRoute: AuthenticatedAuthorizedAppsIndexRoute,
@@ -392,7 +351,6 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   SignInRoute: SignInRoute,
   DotwellKnownOauthAuthorizationServerRoute:

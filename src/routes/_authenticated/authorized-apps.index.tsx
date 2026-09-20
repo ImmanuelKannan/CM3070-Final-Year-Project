@@ -10,7 +10,7 @@ import { ATTRIBUTE_LABELS } from "#/lib/profile-catalogue";
 export const Route = createFileRoute("/_authenticated/authorized-apps/")({
 	beforeLoad: ({ context }) => {
 		if (context.session.user.accountKind !== "identity_holder") {
-			throw redirect({ to: "/developer" });
+			throw redirect({ to: "/" });
 		}
 	},
 	loader: async () => ({ authorizedApps: await listAuthorizedApps() }),
