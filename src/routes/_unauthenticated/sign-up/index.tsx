@@ -1,14 +1,7 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { getSession } from "#/lib/auth.functions";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { messages } from "#/lib/i18n";
 
-export const Route = createFileRoute("/sign-up/")({
-	beforeLoad: async () => {
-		const session = await getSession();
-		if (session) {
-			throw redirect({ to: "/" });
-		}
-	},
+export const Route = createFileRoute("/_unauthenticated/sign-up/")({
 	component: SignUpChooser,
 });
 

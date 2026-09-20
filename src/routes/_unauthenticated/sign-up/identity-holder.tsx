@@ -1,20 +1,14 @@
-import {
-	createFileRoute,
-	redirect,
-	useRouterState,
-} from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useId, useState } from "react";
 import { Input } from "#/components/ui/input";
-import { getSession } from "#/lib/auth.functions";
 import { authClient } from "#/lib/auth-client";
 import { messages } from "#/lib/i18n";
 
-export const Route = createFileRoute("/sign-up/identity-holder")({
-	beforeLoad: async () => {
-		if (await getSession()) throw redirect({ to: "/" });
+export const Route = createFileRoute("/_unauthenticated/sign-up/identity-holder")(
+	{
+		component: IdentityHolderSignUp,
 	},
-	component: IdentityHolderSignUp,
-});
+);
 
 function IdentityHolderSignUp() {
 	const [firstName, setFirstName] = useState("");
