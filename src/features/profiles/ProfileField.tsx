@@ -7,6 +7,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { Input } from "#/components/ui/input";
 import { messages } from "#/lib/i18n";
 import {
 	emergencyGroupErrors,
@@ -115,7 +116,7 @@ export function ProfileField({
 
 	const isInvalid = error !== "";
 	const fieldClasses = cn(
-		"w-full rounded-lg border border-line bg-bg-base px-3.5 py-2.5 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60",
+		"w-full rounded-lg border border-line px-3.5 py-2.5 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60",
 		isInvalid && "border-destructive focus-visible:outline-destructive",
 	);
 
@@ -182,13 +183,16 @@ export function ProfileField({
 		);
 	} else {
 		inputElement = (
-			<input
+			<Input
 				id={inputId}
 				type={field.type ?? "text"}
 				value={draft}
 				onChange={handleChange}
 				onBlur={handleBlur}
-				className={cn(fieldClasses, "pr-9")}
+				className={cn(
+					"pr-9",
+					isInvalid && "border-destructive focus-visible:outline-destructive",
+				)}
 				placeholder={field.placeholder}
 				aria-invalid={isInvalid || undefined}
 				aria-describedby={ariaDescribedBy}

@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { type FormEvent, useId, useState } from "react";
 
 import { MultiselectAttribute } from "#/components/multiselect-attribute";
+import { Input } from "#/components/ui/input";
 import { messages } from "#/lib/i18n";
 import type {
 	OAuthClientProfileType,
@@ -263,7 +264,7 @@ export function DeveloperPage({
 							<label htmlFor={nameId} className="font-semibold text-sea-ink">
 								{messages.developer.appNameLabel}
 							</label>
-							<input
+							<Input
 								id={nameId}
 								type="text"
 								value={name}
@@ -274,7 +275,7 @@ export function DeveloperPage({
 								placeholder={messages.developer.appNamePlaceholder}
 								maxLength={100}
 								required
-								className="min-h-11 w-full rounded-lg border border-line bg-bg-base px-3.5 py-2.5 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+								className="min-h-11"
 							/>
 							{formErrors.name ? (
 								<p className="text-sm font-semibold text-destructive">
@@ -300,7 +301,7 @@ export function DeveloperPage({
 									clearFormError("profileType");
 								}}
 								required
-								className="min-h-11 w-full rounded-lg border border-line bg-bg-base px-3.5 py-2.5 text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+								className="min-h-11 w-full rounded-lg border border-line px-3.5 py-2.5 text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 							>
 								<option value="">
 									{messages.developer.profileTypePlaceholder}
@@ -335,7 +336,7 @@ export function DeveloperPage({
 								placeholder={messages.developer.redirectUrisPlaceholder}
 								rows={5}
 								required
-								className="min-h-32 w-full resize-y rounded-lg border border-line bg-bg-base px-3.5 py-2.5 font-mono text-sm text-sea-ink placeholder:font-sans placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+								className="min-h-32 w-full resize-y rounded-lg border border-line px-3.5 py-2.5 font-mono text-sm text-sea-ink placeholder:font-sans placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 							/>
 							<p className="text-xs text-sea-ink-soft">
 								{messages.developer.redirectUrisHint}

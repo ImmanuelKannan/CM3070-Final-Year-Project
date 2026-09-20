@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Pencil } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
+import { Input } from "#/components/ui/input";
 import { getSession } from "#/lib/auth.functions";
 import {
 	approveConsentGrant,
@@ -290,7 +291,7 @@ function ConsentRequest({ oauthQuery }: { oauthQuery: string }) {
 									id={sourceSelectId}
 									value={selectedProfileId}
 									onChange={(event) => setSelectedProfileId(event.target.value)}
-									className="w-full rounded-lg border border-line bg-bg-surface px-3.5 py-2.5 pr-9 text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+									className="w-full rounded-lg border border-line px-3.5 py-2.5 pr-9 text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 								>
 									<option value="default">
 										{messages.consent.baseIdentity}
@@ -529,7 +530,7 @@ function EditInput({
 	onChange: (value: string) => void;
 }) {
 	const classes =
-		"w-full rounded-lg border border-line bg-bg-surface px-3.5 py-2.5 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring";
+		"w-full rounded-lg border border-line px-3.5 py-2.5 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring";
 
 	if (fieldType === "textarea") {
 		return (
@@ -563,13 +564,12 @@ function EditInput({
 	}
 
 	return (
-		<input
+		<Input
 			id={id}
 			type={fieldType ?? "text"}
 			value={value}
 			onChange={(e) => onChange(e.target.value)}
 			placeholder={placeholder}
-			className={classes}
 		/>
 	);
 }

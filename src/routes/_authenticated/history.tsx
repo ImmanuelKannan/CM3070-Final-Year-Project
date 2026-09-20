@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 
+import { Input } from "#/components/ui/input";
 import type {
 	ConsentHistory,
 	ConsentHistoryEvent,
@@ -169,13 +170,13 @@ function HistoryPage() {
 							</div>
 							<div className="relative">
 								<Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-sea-ink-soft" />
-								<input
+								<Input
 									id="history-search"
 									name="search"
 									type="search"
 									defaultValue={routeSearch.search ?? ""}
 									placeholder={messages.history.searchPlaceholder}
-									className="min-h-11 w-full rounded-lg border border-line bg-bg-base px-3.5 py-2.5 pl-10 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+									className="min-h-11 pl-10"
 								/>
 							</div>
 						</div>

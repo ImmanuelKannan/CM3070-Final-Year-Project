@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
+import { Input } from "#/components/ui/input";
 import { messages } from "#/lib/i18n";
 import {
 	PROFILE_TYPE_LABELS,
@@ -166,7 +167,7 @@ export function AddProfileModal({ open, onClose, onSubmit }: Props) {
 								clearError("type");
 							}}
 							className={cn(
-								"w-full appearance-none rounded-lg border border-line bg-bg-base px-3.5 py-2.5 pr-9 text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring",
+								"w-full appearance-none rounded-lg border border-line px-3.5 py-2.5 pr-9 text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring",
 								errors.type && "border-destructive",
 							)}
 						>
@@ -199,7 +200,7 @@ export function AddProfileModal({ open, onClose, onSubmit }: Props) {
 						>
 							{messages.profiles.nameLabel}
 						</label>
-						<input
+						<Input
 							id={nameId}
 							type="text"
 							value={name}
@@ -207,10 +208,7 @@ export function AddProfileModal({ open, onClose, onSubmit }: Props) {
 								setName(event.target.value);
 								clearError("name");
 							}}
-							className={cn(
-								"w-full rounded-lg border border-line bg-bg-base px-3.5 py-2.5 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring",
-								errors.name && "border-destructive",
-							)}
+							className={cn(errors.name && "border-destructive")}
 							placeholder={messages.profiles.namePlaceholder}
 							maxLength={100}
 							required
@@ -236,7 +234,7 @@ export function AddProfileModal({ open, onClose, onSubmit }: Props) {
 							id={descriptionId}
 							value={description}
 							onChange={(event) => setDescription(event.target.value)}
-							className="w-full min-h-20 resize-y rounded-lg border border-line bg-bg-base px-3.5 py-2.5 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+							className="w-full min-h-20 resize-y rounded-lg border border-line px-3.5 py-2.5 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 							placeholder={messages.profiles.descriptionPlaceholder}
 							rows={3}
 							maxLength={500}

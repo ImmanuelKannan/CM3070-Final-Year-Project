@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { Input } from "#/components/ui/input";
 import type { ProfileView } from "#/lib/contextual-profiles";
 import { messages } from "#/lib/i18n";
 import {
@@ -184,7 +185,7 @@ export function ContextProfileAttributesModal({
 										setType(event.target.value as ProfileType);
 										setSavedFlag(false);
 									}}
-									className="w-full appearance-none rounded-lg border border-line bg-bg-surface px-3.5 py-2.5 pr-9 text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+									className="w-full appearance-none rounded-lg border border-line px-3.5 py-2.5 pr-9 text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 								>
 									{PROFILE_TYPES.map((value) => (
 										<option key={value} value={value}>
@@ -201,7 +202,7 @@ export function ContextProfileAttributesModal({
 								>
 									{messages.profiles.nameLabel}
 								</label>
-								<input
+								<Input
 									id={nameId}
 									type="text"
 									value={name}
@@ -210,7 +211,6 @@ export function ContextProfileAttributesModal({
 										setSavedFlag(false);
 									}}
 									maxLength={100}
-									className="w-full rounded-lg border border-line bg-bg-surface px-3.5 py-2.5 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 								/>
 							</div>
 						</div>
@@ -231,7 +231,7 @@ export function ContextProfileAttributesModal({
 								}}
 								maxLength={500}
 								rows={3}
-								className="w-full min-h-20 resize-y rounded-lg border border-line bg-bg-surface px-3.5 py-2.5 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+								className="w-full min-h-20 resize-y rounded-lg border border-line px-3.5 py-2.5 text-sea-ink placeholder:text-sea-ink-soft focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 								placeholder={messages.profiles.descriptionPlaceholder}
 							/>
 						</div>

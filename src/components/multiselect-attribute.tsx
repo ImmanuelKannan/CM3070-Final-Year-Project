@@ -41,7 +41,7 @@ export function MultiselectAttribute({
 			<Select.Label className="font-semibold text-sea-ink">
 				{messages.developer.identityAttributeSelectLabel}
 			</Select.Label>
-			<Select.Trigger className="flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border border-line bg-bg-base px-3.5 py-2.5 text-left text-sea-ink data-[popup-open]:border-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring">
+			<Select.Trigger className="flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border border-line px-3.5 py-2.5 text-left text-sea-ink data-[popup-open]:border-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring">
 				<Select.Value>{renderValue}</Select.Value>
 				<Select.Icon>
 					<ChevronDown className="size-4 text-sea-ink-soft" />
