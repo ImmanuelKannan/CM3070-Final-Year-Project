@@ -7,6 +7,7 @@ import {
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { z } from "zod";
 
 import {
 	getAuthorizedApps,
@@ -34,6 +35,9 @@ export const Route = createFileRoute(
 			throw redirect({ to: "/" });
 		}
 	},
+	validateSearch: z.object({
+		q: z.string().max(200).optional(),
+	}),
 	loader: async ({ params }) => {
 		try {
 			const authorizedApp = await getAuthorizedApps({
@@ -85,9 +89,11 @@ function NotFoundView() {
 }
 
 function BackLink() {
+	const { q } = Route.useSearch();
 	return (
 		<Link
 			to="/authorized-apps"
+			search={q ? { q } : undefined}
 			className="inline-flex w-fit items-center gap-2 rounded-lg px-2 py-1 text-sm font-semibold text-sea-ink-soft no-underline transition-colors hover:text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 		>
 			<ArrowLeft aria-hidden="true" className="h-4 w-4" />

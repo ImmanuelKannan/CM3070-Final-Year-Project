@@ -184,6 +184,12 @@ export const messages = {
 		empty: "No connected apps yet.",
 		emptyHint:
 			"When you authorize an app, it will appear here until you revoke access.",
+		searchLabel: "Search connected apps",
+		searchPlaceholder: "Search by app name or identifier",
+		clearSearch: "Clear search",
+		searching: "Searching…",
+		noMatchHeading: "No matching apps",
+		noMatchBody: "Try a different app name or identifier.",
 		scopesHeading: "Permissions",
 		attributesHeading: "Latest shared details",
 		noAttributes: "No identity details shared yet.",
