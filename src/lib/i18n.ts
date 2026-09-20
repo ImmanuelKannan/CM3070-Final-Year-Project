@@ -9,12 +9,10 @@ export const messages = {
 	nav: {
 		brandLabel: "HeyMe home",
 		home: "Home",
-		dashboard: "Dashboard",
 		profiles: "Profiles",
 		history: "Consent history",
 		connectedApps: "Connected Apps",
 		developer: "Developer",
-		signIn: "Sign in",
 		signOut: "Sign out",
 		signingOut: "Signing out…",
 		label: "Primary Nav",
@@ -340,9 +338,5 @@ export const messages = {
 		userFallback: "Signed-in user",
 		accountLabel: "Account menu",
 		menuLabel: "Main menu",
-	},
-	footer: {
-		copyright: "© HeyMe",
-		note: "A personal identity service.",
 	},
 } as const;

@@ -7,11 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
-import {
-	SiteFooter,
-	SiteHeader,
-	SkipLink,
-} from "#/components/site-shell-component";
+import { SiteHeader, SkipLink } from "#/components/site-shell-component";
 import { locale, messages } from "#/lib/i18n";
 
 import appCss from "../styles.css?url";
@@ -68,7 +64,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 							>
 								{children}
 							</main>
-							<SiteFooter />
 						</div>
 					</>
 				)}

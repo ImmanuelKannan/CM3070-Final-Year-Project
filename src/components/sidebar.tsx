@@ -1,4 +1,4 @@
-import { Link, useRouter } from "@tanstack/react-router";
+import { Link, getRouteApi, useRouter } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { ClipboardList, Code2, Link2, LogOut, Users } from "lucide-react";
 import { useState } from "react";
@@ -45,13 +45,16 @@ function avatarInitial(name: string | null | undefined, email: string): string {
 	return source ? source.charAt(0).toUpperCase() : "?";
 }
 
+const authenticatedRoute = getRouteApi("/_authenticated");
+
 export function Sidebar() {
 	const router = useRouter();
-	const { data: session, isPending } = authClient.useSession();
+	const { data: clientSession } = authClient.useSession();
+	const { session: routeSession } = authenticatedRoute.useRouteContext();
 	const [isSigningOut, setIsSigningOut] = useState(false);
 	const [signOutError, setSignOutError] = useState(false);
 
-	const user = session?.user;
+	const user = clientSession?.user ?? routeSession.user;
 	const accountKind = user?.accountKind;
 	const navItems = NAV_ITEMS.filter((item) => item.kind === accountKind);
 
@@ -76,7 +79,6 @@ export function Sidebar() {
 	const userName = user?.name ?? messages.sidebar.userFallback;
 	const userEmail = user?.email ?? "";
 	const displayName = user?.name?.trim() || userEmail;
-	const showAccountSkeleton = isPending;
 
 	return (
 		<aside
@@ -90,7 +92,6 @@ export function Sidebar() {
 				email={userEmail}
 				displayName={displayName}
 				image={user?.image ?? null}
-				loading={showAccountSkeleton}
 				isSigningOut={isSigningOut}
 				signOutError={signOutError}
 				onSignOut={handleSignOut}
@@ -155,7 +156,6 @@ type SidebarAccountProps = {
 	email: string;
 	displayName: string;
 	image: string | null;
-	loading: boolean;
 	isSigningOut: boolean;
 	signOutError: boolean;
 	onSignOut: () => void;
@@ -166,19 +166,13 @@ function SidebarAccount({
 	email,
 	displayName,
 	image,
-	loading,
 	isSigningOut,
 	signOutError,
 	onSignOut,
 }: SidebarAccountProps) {
 	return (
 		<div className="flex flex-row items-center gap-3 md:flex-col md:items-stretch md:gap-3 md:border-t md:border-line md:p-4">
-			{loading ? (
-				<div
-					aria-hidden="true"
-					className="size-9 animate-pulse rounded-full bg-bg-base"
-				/>
-			) : image ? (
+			{image ? (
 				<img
 					src={image}
 					alt={messages.auth.avatarAlt.replace("{name}", name || email)}
@@ -203,7 +197,7 @@ function SidebarAccount({
 			<button
 				type="button"
 				onClick={onSignOut}
-				disabled={loading || isSigningOut}
+				disabled={isSigningOut}
 				aria-label={messages.nav.signOut}
 				className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-line bg-bg-surface px-3 py-2 text-sm font-semibold text-sea-ink transition-colors hover:bg-lagoon/10 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
 			>

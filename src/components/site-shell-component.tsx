@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 
-import { HeaderAuthControls } from "#/integrations/better-auth/header-auth-controls";
 import { messages } from "#/lib/i18n";
 
 export function SkipLink() {
@@ -33,19 +32,7 @@ export function SiteHeader() {
 						{messages.brand.name}
 					</span>
 				</Link>
-				<HeaderAuthControls />
 			</div>
 		</header>
-	);
-}
-
-export function SiteFooter() {
-	return (
-		<footer className="border-t border-line bg-bg-surface">
-			<div className="mx-auto flex w-full max-w-5xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-4 py-5 text-sm text-sea-ink-soft">
-				<p className="font-semibold">{messages.footer.copyright}</p>
-				<p>{messages.footer.note}</p>
-			</div>
-		</footer>
 	);
 }
