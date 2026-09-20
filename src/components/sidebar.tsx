@@ -40,7 +40,7 @@ const NAV_ITEMS: readonly NavItem[] = [
 	},
 ] as const;
 
-function avatarInitial(name: string | null | undefined, email: string): string {
+function getAvatarInitials(name: string | null | undefined, email: string): string {
 	const source = name?.trim() || email;
 	return source ? source.charAt(0).toUpperCase() : "?";
 }
@@ -171,28 +171,29 @@ function SidebarAccount({
 	onSignOut,
 }: SidebarAccountProps) {
 	return (
-		<div className="flex flex-row items-center gap-3 md:flex-col md:items-stretch md:gap-3 md:border-t md:border-line md:p-4">
-			{image ? (
-				<img
-					src={image}
-					alt={messages.auth.avatarAlt.replace("{name}", name || email)}
-					className="size-9 rounded-full border border-line object-cover"
-				/>
-			) : (
-				<span
-					aria-hidden="true"
-					className="inline-flex size-9 items-center justify-center rounded-full border border-line bg-bg-base text-sm font-semibold text-sea-ink-soft"
-				>
-					{avatarInitial(name, email)}
-				</span>
-			)}
-			<div className="min-w-0 flex-1 md:flex-none">
-				<p className="truncate text-sm font-semibold text-sea-ink">
-					{displayName || name}
-				</p>
-				{email ? (
-					<p className="truncate text-xs text-sea-ink-soft">{email}</p>
-				) : null}
+		<div className="flex flex-col gap-3 md:border-t md:border-line md:p-4">
+			<div className="flex flex-row items-center gap-3">
+				{image ? (
+					<img
+						src={image}
+						alt={messages.auth.avatarAlt.replace("{name}", name || email)}
+						className="size-9 rounded-full border border-line object-cover"
+					/>
+				) : (
+					<span
+						className="inline-flex size-9 items-center justify-center rounded-full border border-line bg-bg-base text-sm font-semibold text-sea-ink-soft"
+					>
+						{getAvatarInitials(name, email)}
+					</span>
+				)}
+				<div className="min-w-0 flex-1">
+					<p className="truncate text-sm font-semibold text-sea-ink">
+						{displayName || name}
+					</p>
+					{email ? (
+						<p className="truncate text-xs text-sea-ink-soft">{email}</p>
+					) : null}
+				</div>
 			</div>
 			<button
 				type="button"
