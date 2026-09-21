@@ -260,6 +260,17 @@ export const messages = {
 		deleteErrorHeading: "We couldn't delete that OAuth client",
 		deleteErrorBody:
 			"Check your connection and try again. If the problem keeps happening, reload the page.",
+		rotateClient: "Rotate secret",
+		rotatingClient: "Rotating…",
+		rotateConfirmTitle: 'Rotate client secret for "{name}"?',
+		rotateConfirmBody:
+			"The current secret will become invalid immediately. Existing tokens will not be revoked.",
+		rotateErrorHeading: "Failed to rotate client secret",
+		rotateErrorBody:
+			"Check your connection and try again. If the problem keeps happening, reload the page.",
+		rotateSuccessTitle: "New client secret",
+		rotateSuccessText:
+			"Copy this secret now. You won't be able to see it again after closing this popup.",
 	},
 	history: {
 		title: "Consent history",

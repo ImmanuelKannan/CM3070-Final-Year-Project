@@ -8,6 +8,7 @@ import {
 	listOAuthClients,
 	normalizeCreateOAuthClientInput,
 	normalizeOAuthClientId,
+	rotateOAuthClientSecret,
 } from "#/lib/oauth-clients";
 
 const OAUTH_CLIENTS_ERROR_MESSAGE =
@@ -32,4 +33,11 @@ export const deleteOAuthClientFn = createServerFn({ method: "POST" })
 	.handler(async ({ data }) => {
 		await requireAccountKind("developer", OAUTH_CLIENTS_ERROR_MESSAGE);
 		return deleteOAuthClient(getRequestHeaders(), data);
+	});
+
+export const rotateOAuthClientSecretFn = createServerFn({ method: "POST" })
+	.validator(normalizeOAuthClientId)
+	.handler(async ({ data }) => {
+		await requireAccountKind("developer", OAUTH_CLIENTS_ERROR_MESSAGE);
+		return rotateOAuthClientSecret(getRequestHeaders(), data);
 	});

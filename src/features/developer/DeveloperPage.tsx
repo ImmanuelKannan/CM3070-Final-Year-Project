@@ -1,6 +1,6 @@
 import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 
 import { MultiselectAttribute } from "#/components/multiselect-attribute";
 import { Input } from "#/components/ui/input";
@@ -12,6 +12,7 @@ import type {
 import {
 	createOAuthClientFn,
 	deleteOAuthClientFn,
+	rotateOAuthClientSecretFn,
 } from "#/lib/oauth-clients.functions";
 import {
 	APPLICATION_CONTEXTS,
@@ -25,6 +26,12 @@ type ClientCredentials = {
 };
 
 type FormField = "name" | "profileType" | "redirectUris";
+
+type RotateState =
+	| { stage: "confirm"; client: OAuthClientSummary }
+	| { stage: "rotating"; client: OAuthClientSummary }
+	| { stage: "success"; client: OAuthClientSummary; clientSecret: string }
+	| { stage: "error"; client: OAuthClientSummary; error: string };
 
 function getErrorMessage(error: unknown, fallback: string): string {
 	if (error && typeof error === "object" && "message" in error) {
@@ -90,6 +97,7 @@ export function DeveloperPage({
 }) {
 	const createOauthClient = useServerFn(createOAuthClientFn);
 	const deleteOauthClient = useServerFn(deleteOAuthClientFn);
+	const rotateOauthClientSecret = useServerFn(rotateOAuthClientSecretFn);
 
 	const [clients, setClients] = useState<OAuthClientSummary[]>(initialClients);
 	const [name, setName] = useState("");
@@ -114,6 +122,7 @@ export function DeveloperPage({
 		null,
 	);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
+	const [rotateState, setRotateState] = useState<RotateState | null>(null);
 
 	const nameId = useId();
 	const profileTypeId = useId();
@@ -232,6 +241,35 @@ export function DeveloperPage({
 		} catch {
 			setIsCopied(null);
 			setCopyError(messages.developer.copyError);
+		}
+	}
+
+	async function handleSecretRotation() {
+		if (!rotateState || (rotateState.stage !== "confirm" && rotateState.stage !== "error")) {
+			return;
+		}
+
+		const client = rotateState.client;
+		setRotateState({ stage: "rotating", client });
+
+		try {
+			const result = await rotateOauthClientSecret({ data: client.client_id });
+			if (credentials?.clientId === client.client_id) {
+				setCredentials(null);
+				setIsCopied(null);
+				setCopyError(null);
+			}
+			setRotateState({
+				stage: "success",
+				client,
+				clientSecret: result.client_secret,
+			});
+		} catch (error) {
+			setRotateState({
+				stage: "error",
+				client,
+				error: getErrorMessage(error, messages.developer.rotateErrorBody),
+			});
 		}
 	}
 
@@ -447,11 +485,41 @@ export function DeveloperPage({
 								onDelete={() => {
 									void handleDelete(client);
 								}}
+								rotateDisabled={isCreatingClient || isDeletingClientId !== null}
+								onRotate={() => {
+									setIsCopied(null);
+									setCopyError(null);
+									setRotateState({ stage: "confirm", client });
+								}}
 							/>
 						))}
 					</ul>
 				)}
 			</section>
+
+			{rotateState ? (
+				<RotateClientSecretDialog
+					state={rotateState}
+					isSecretCopied={
+						rotateState.stage === "success" &&
+						isCopied === rotateState.clientSecret
+					}
+					copyError={copyError}
+					onClose={() => {
+						setRotateState(null);
+						setIsCopied(null);
+						setCopyError(null);
+					}}
+					onConfirm={() => {
+						void handleSecretRotation();
+					}}
+					onCopySecret={() => {
+						if (rotateState.stage === "success") {
+							void handleCopy(rotateState.clientSecret);
+						}
+					}}
+				/>
+			) : null}
 		</div>
 	);
 }
@@ -491,11 +559,15 @@ function ClientRow({
 	deleting,
 	deleteDisabled,
 	onDelete,
+	rotateDisabled,
+	onRotate,
 }: {
 	client: OAuthClientSummary;
 	deleting: boolean;
 	deleteDisabled: boolean;
 	onDelete: () => void;
+	rotateDisabled: boolean;
+	onRotate: () => void;
 }) {
 	return (
 		<li className="grid gap-4 rounded-2xl border border-line bg-bg-surface p-5 sm:p-6">
@@ -508,16 +580,26 @@ function ClientRow({
 						{getProfileTypeLabel(client.metadata?.profileType)}
 					</p>
 				</div>
-				<button
-					type="button"
-					onClick={onDelete}
-					disabled={deleteDisabled}
-					className="inline-flex min-h-10 items-center justify-center rounded-lg border border-destructive/40 px-3.5 py-2 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
-				>
-					{deleting
-						? messages.developer.deletingClient
-						: messages.developer.deleteClient}
-				</button>
+				<div className="flex flex-wrap items-center gap-2">
+					<button
+						type="button"
+						onClick={onRotate}
+						disabled={rotateDisabled}
+						className="inline-flex min-h-10 items-center justify-center rounded-lg border border-line bg-bg-surface px-3.5 py-2 text-sm font-semibold text-sea-ink transition-colors hover:bg-lagoon/10 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+					>
+						{messages.developer.rotateClient}
+					</button>
+					<button
+						type="button"
+						onClick={onDelete}
+						disabled={deleteDisabled}
+						className="inline-flex min-h-10 items-center justify-center rounded-lg border border-destructive/40 px-3.5 py-2 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+					>
+						{deleting
+							? messages.developer.deletingClient
+							: messages.developer.deleteClient}
+					</button>
+				</div>
 			</header>
 
 			<dl className="grid gap-3 border-t border-line/60 pt-4 sm:grid-cols-2">
@@ -575,4 +657,168 @@ function getProfileTypeLabel(
 	return profileType
 		? PROFILE_TYPE_LABELS[profileType]
 		: messages.developer.profileTypeUnknown;
+}
+
+function RotateClientSecretDialog({
+	state,
+	isSecretCopied,
+	copyError,
+	onClose,
+	onConfirm,
+	onCopySecret,
+}: {
+	state: RotateState;
+	isSecretCopied: boolean;
+	copyError: string | null;
+	onClose: () => void;
+	onConfirm: () => void;
+	onCopySecret: () => void;
+}) {
+	const dialogRef = useRef<HTMLDialogElement | null>(null);
+	const headingRef = useRef<HTMLHeadingElement | null>(null);
+	const titleId = useId();
+	const isRotating = state.stage === "rotating" || state.stage === "success";
+
+	useEffect(() => {
+		const dialog = dialogRef.current;
+		if (dialog && !dialog.open) dialog.showModal();
+	}, []);
+
+	useEffect(() => {
+		if (state.stage) headingRef.current?.focus();
+	}, [state.stage]);
+
+	const clientName = getClientName(state.client);
+	const title =
+		state.stage === "success"
+			? messages.developer.rotateSuccessTitle
+			: messages.developer.rotateConfirmTitle.replace("{name}", clientName);
+
+	const cancelButtonClass =
+		"inline-flex items-center justify-center rounded-lg border border-line bg-bg-surface px-4 py-2.5 font-semibold text-sea-ink no-underline transition-colors hover:bg-lagoon/10 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring";
+	const dangerButtonClass =
+		"inline-flex min-h-10 items-center justify-center rounded-lg border border-destructive/40 bg-bg-surface px-4 py-2.5 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-60";
+	const primaryButtonClass =
+		"inline-flex items-center justify-center rounded-lg bg-sea-ink px-4 py-2.5 font-semibold text-foam no-underline transition-colors hover:bg-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring";
+
+	return (
+		<dialog
+			ref={dialogRef}
+			className="m-auto w-full max-w-md rounded-2xl border border-line bg-bg-surface p-0 text-sea-ink shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+			onClose={onClose}
+			onCancel={(event) => {
+				event.preventDefault();
+                if (!isRotating) {
+                  onClose();
+                }
+  			}}
+			onClick={(event) => {
+				if (isRotating) return;
+				if (event.target === event.currentTarget) onClose();
+			}}
+		>
+			<div className="grid gap-0">
+				<div className="border-b border-line px-6 py-4">
+					<h2
+						id={titleId}
+						ref={headingRef}
+						tabIndex={-1}
+						className="font-display text-lg font-bold text-sea-ink focus:outline-none"
+					>
+						{title}
+					</h2>
+				</div>
+
+				<div className="grid gap-5 px-6 py-5">
+					{state.stage === "confirm" ? (
+						<p className="text-sm leading-relaxed text-sea-ink-soft">
+							{messages.developer.rotateConfirmBody}
+						</p>
+					) : null}
+
+					{state.stage === "rotating" ? (
+						<p className="text-sm text-sea-ink-soft">
+							{messages.developer.rotatingClient}
+						</p>
+					) : null}
+
+					{state.stage === "success" ? (
+						<div className="grid gap-3">
+							<p className="text-sm leading-relaxed text-sea-ink-soft">
+								{messages.developer.rotateSuccessText}
+							</p>
+							<CredentialRow
+								label={messages.developer.clientSecretLabel}
+								value={state.clientSecret}
+								copied={isSecretCopied}
+								onCopy={onCopySecret}
+							/>
+							{copyError ? (
+								<output className="text-sm font-semibold text-destructive">
+									{copyError}
+								</output>
+							) : isSecretCopied ? (
+								<output className="text-sm font-semibold text-palm">
+									{messages.developer.copied}
+								</output>
+							) : null}
+						</div>
+					) : null}
+
+					{state.stage === "error" ? (
+						<section
+							role="alert"
+							className="grid gap-1 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+						>
+							<h3 className="text-sm font-semibold">
+								{messages.developer.rotateErrorHeading}
+							</h3>
+							<p className="text-sm">{state.error}</p>
+						</section>
+					) : null}
+				</div>
+
+				<div className="flex flex-wrap justify-end gap-3 border-t border-line px-6 py-4">
+					{state.stage === "confirm" || state.stage === "error" ? (
+						<>
+							<button
+								type="button"
+								onClick={onClose}
+								className={cancelButtonClass}
+							>
+								{messages.profiles.modalCancel}
+							</button>
+							<button
+								type="button"
+								onClick={onConfirm}
+								className={dangerButtonClass}
+							>
+								{messages.developer.rotateClient}
+							</button>
+						</>
+					) : null}
+
+					{state.stage === "rotating" ? (
+						<button
+							type="button"
+							disabled
+							className="inline-flex min-h-10 items-center justify-center rounded-lg border border-destructive/40 bg-bg-surface px-4 py-2.5 text-sm font-semibold text-destructive transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+						>
+							{messages.developer.rotatingClient}
+						</button>
+					) : null}
+
+					{state.stage === "success" ? (
+						<button
+							type="button"
+							onClick={onClose}
+							className={primaryButtonClass}
+						>
+							{messages.profiles.modalDone}
+						</button>
+					) : null}
+				</div>
+			</div>
+		</dialog>
+	);
 }

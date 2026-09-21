@@ -134,6 +134,28 @@ export async function listOAuthClients(
 	return clients.map(toOAuthClientSummary);
 }
 
+export async function rotateOAuthClientSecret(
+	headers: Headers,
+	clientId: string,
+): Promise<{ client_id: string; client_secret: string }> {
+	const validatedClientId = normalizeOAuthClientId(clientId);
+	const rotatedClient = await auth.api.rotateClientSecret({
+		headers,
+		body: { client_id: validatedClientId },
+	});
+
+	if (!rotatedClient.client_secret) {
+		throw new APIError("INTERNAL_SERVER_ERROR", {
+			message: "Failed to rotate client secret",
+		});
+	}
+
+	return {
+		client_id: rotatedClient.client_id,
+		client_secret: rotatedClient.client_secret,
+	};
+}
+
 export async function deleteOAuthClient(
 	headers: Headers,
 	clientId: string,
