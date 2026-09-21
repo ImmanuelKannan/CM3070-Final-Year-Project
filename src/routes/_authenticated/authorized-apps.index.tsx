@@ -4,11 +4,10 @@ import {
 	redirect,
 	useNavigate,
 } from "@tanstack/react-router";
-import { Link2, Loader2, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Link2, Search } from "lucide-react";
 import { z } from "zod";
 
-import { Input } from "#/components/ui/input";
+import { SearchBox } from "#/components/search-box";
 import { listAuthorizedApps } from "#/lib/authorized-apps.functions";
 import { formatDateTime } from "#/lib/format-date";
 import { messages } from "#/lib/i18n";
@@ -72,6 +71,7 @@ function AuthorizedAppsIndex() {
 			) : (
 				<>
 					<SearchBox
+						inputId="authorized-apps-search"
 						value={q ?? ""}
 						onChange={(value) =>
 							navigate({
@@ -80,6 +80,12 @@ function AuthorizedAppsIndex() {
 								replace: true,
 							})
 						}
+						labels={{
+							label: messages.authorizedApps.searchLabel,
+							placeholder: messages.authorizedApps.searchPlaceholder,
+							clear: messages.authorizedApps.clearSearch,
+							searching: messages.authorizedApps.searching,
+						}}
 					/>
 					{filteredApps.length === 0 ? (
 						<EmptyState hasSearch />
@@ -97,65 +103,6 @@ function AuthorizedAppsIndex() {
 				</>
 			)}
 		</div>
-	);
-}
-
-function SearchBox({
-	value,
-	onChange,
-}: {
-	value: string;
-	onChange: (value: string) => void;
-}) {
-	const [searchDraft, setSearchDraft] = useState(value);
-	useEffect(() => {
-		setSearchDraft(value);
-	}, [value]);
-	const isSearching = searchDraft !== value;
-	return (
-		<search className="grid gap-1.5">
-			<div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-				<label
-					htmlFor="authorized-apps-search"
-					className="text-sm font-semibold text-sea-ink"
-				>
-					{messages.authorizedApps.searchLabel}
-				</label>
-				{searchDraft ? (
-					<Link
-						to="/authorized-apps"
-						className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-lagoon-deep underline underline-offset-4 hover:text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
-					>
-						{messages.authorizedApps.clearSearch}
-					</Link>
-				) : null}
-			</div>
-			<div className="relative">
-				<Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-sea-ink-soft" />
-				<Input
-					id="authorized-apps-search"
-					type="search"
-					value={searchDraft}
-					onChange={(e) => {
-						setSearchDraft(e.target.value);
-						onChange(e.target.value);
-					}}
-					placeholder={messages.authorizedApps.searchPlaceholder}
-					className="min-h-11 pl-10 pr-9"
-				/>
-				{isSearching ? (
-					<span
-						aria-live="polite"
-						className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2"
-					>
-						<Loader2
-							className="h-4 w-4 animate-spin text-lagoon-deep motion-reduce:animate-none"
-						/>
-						<span className="sr-only">{messages.authorizedApps.searching}</span>
-					</span>
-				) : null}
-			</div>
-		</search>
 	);
 }
 
@@ -208,9 +155,7 @@ function AuthorizedAppRow({
 				className="flex items-center gap-3 rounded-2xl border border-line bg-bg-surface p-4 no-underline transition-colors hover:border-lagoon/40 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
 				aria-label={displayName}
 			>
-				<span
-					className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-lagoon text-lg font-bold text-foam"
-				>
+				<span className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-lagoon text-lg font-bold text-foam">
 					{displayName.charAt(0).toUpperCase()}
 				</span>
 				<div className="min-w-0 flex-1">
@@ -219,9 +164,7 @@ function AuthorizedAppRow({
 					</p>
 					<p className="text-xs text-sea-ink-soft">{lastShared}</p>
 				</div>
-				<Link2
-					className="size-4 shrink-0 text-sea-ink-soft"
-				/>
+				<Link2 className="size-4 shrink-0 text-sea-ink-soft" />
 			</Link>
 		</li>
 	);

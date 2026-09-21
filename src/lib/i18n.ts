@@ -273,7 +273,7 @@ export const messages = {
 		revoked: "Revoked",
 		searchLabel: "Search history by app",
 		searchPlaceholder: "Search by app name or identifier",
-		search: "Search",
+		searching: "Searching…",
 		clearSearch: "Clear search",
 		timelineHeading: "Activity",
 		eventRequested: "{app} requested access to your identity",
@@ -294,7 +294,6 @@ export const messages = {
 			"Consent requests and decisions will appear here when an app asks to access your identity.",
 		noMatchHeading: "No matching events",
 		noMatchBody: "Try a different app name or identifier.",
-		loading: "Loading consent history…",
 		errorHeading: "We couldn't load your consent history",
 		errorBody:
 			"Check your connection and try again. If the problem keeps happening, reload the page.",

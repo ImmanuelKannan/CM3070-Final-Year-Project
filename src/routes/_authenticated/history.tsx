@@ -1,4 +1,9 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	redirect,
+	useNavigate,
+} from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
 	CheckCircle,
@@ -12,7 +17,7 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 
-import { Input } from "#/components/ui/input";
+import { SearchBox } from "#/components/search-box";
 import type {
 	ConsentHistory,
 	ConsentHistoryEvent,
@@ -87,7 +92,6 @@ export const Route = createFileRoute("/_authenticated/history")({
 				page: deps.page,
 			},
 		}),
-	pendingComponent: HistoryPending,
 	errorComponent: HistoryError,
 	component: HistoryPage,
 });
@@ -102,17 +106,6 @@ function HistoryHeader() {
 				{messages.history.pageText}
 			</p>
 		</header>
-	);
-}
-
-function HistoryPending() {
-	return (
-		<div className="mx-auto grid w-full max-w-5xl gap-8 px-4 sm:gap-12">
-			<HistoryHeader />
-			<output className="rounded-2xl border border-line bg-bg-surface p-6 text-sm text-sea-ink-soft">
-				{messages.history.loading}
-			</output>
-		</div>
 	);
 }
 
@@ -136,6 +129,7 @@ function HistoryError() {
 function HistoryPage() {
 	const history = Route.useLoaderData();
 	const routeSearch = Route.useSearch();
+	const navigate = useNavigate();
 	const search = routeSearch.search?.trim() ?? "";
 	const page = history.page;
 
@@ -144,51 +138,23 @@ function HistoryPage() {
 			<HistoryHeader />
 			<Summary summary={history.summary} />
 			<div className="grid gap-6">
-				<search>
-					<form
-						method="get"
-						action="/history"
-						className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
-					>
-						<div className="grid gap-1.5">
-							<div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-								<label
-									htmlFor="history-search"
-									className="text-sm font-semibold text-sea-ink"
-								>
-									{messages.history.searchLabel}
-								</label>
-								{search ? (
-									<Link
-										to="/history"
-										search={{ search: undefined, page: 1 }}
-										className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-lagoon-deep underline underline-offset-4 hover:text-sea-ink focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
-									>
-										{messages.history.clearSearch}
-									</Link>
-								) : null}
-							</div>
-							<div className="relative">
-								<Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-sea-ink-soft" />
-								<Input
-									id="history-search"
-									name="search"
-									type="search"
-									defaultValue={routeSearch.search ?? ""}
-									placeholder={messages.history.searchPlaceholder}
-									className="min-h-11 pl-10"
-								/>
-							</div>
-						</div>
-						<button
-							type="submit"
-							className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-sea-ink px-4 py-2.5 font-semibold text-foam transition-colors hover:bg-lagoon-deep focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
-						>
-							<Search className="size-4" />
-							{messages.history.search}
-						</button>
-					</form>
-				</search>
+				<SearchBox
+					inputId="history-search"
+					value={routeSearch.search ?? ""}
+					onChange={(value) =>
+						navigate({
+							to: "/history",
+							search: { search: value || undefined, page: 1 },
+							replace: true,
+						})
+					}
+					labels={{
+						label: messages.history.searchLabel,
+						placeholder: messages.history.searchPlaceholder,
+						clear: messages.history.clearSearch,
+						searching: messages.history.searching,
+					}}
+				/>
 
 				{history.events.length === 0 ? (
 					<EmptyHistory hasSearch={search.length > 0} />
