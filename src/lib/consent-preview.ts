@@ -19,9 +19,7 @@ export const STANDARD_SCOPE_ATTRIBUTES: Record<string, readonly string[]> = {
 
 const STANDARD_SCOPES = new Set(Object.keys(STANDARD_SCOPE_ATTRIBUTES));
 
-export function getAppContext(
-	metadata: any,
-): ApplicationContext | null {
+export function getAppContext(metadata: any): ApplicationContext | null {
 	let parsedMetadata = metadata;
 
 	if (typeof metadata === "string") {
@@ -69,6 +67,19 @@ export function getRequestedIdentityAttributeKeys(
 	}
 
 	return keys;
+}
+
+export type RequestedEntry = { key: string; value: string | null };
+
+export function resolveRequestedAttributeEntries(
+	scopes: readonly string[],
+	releasedAttributes: Record<string, string>,
+): RequestedEntry[] {
+	return getRequestedIdentityAttributeKeys(scopes).map((key) => {
+		const raw = releasedAttributes[key];
+		const value = raw !== undefined && raw.trim() !== "" ? raw : null;
+		return { key, value };
+	});
 }
 
 export type PreviewAttributeSource = "default" | "profile" | "override";

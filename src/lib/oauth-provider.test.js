@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { pool } from "#/db";
+import { ALLOWED_ATTRIBUTE_KEYS } from "#/lib/profile-catalogue";
 import { auth } from "./auth";
 
 const BASE = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
@@ -22,10 +23,13 @@ describe("OAuth/OIDC discovery documents", () => {
 		expect(body.jwks_uri).toBe(`${BASE}/api/auth/jwks`);
 		expect(body.userinfo_endpoint).toBe(`${BASE}/api/auth/oauth2/userinfo`);
 		expect(body.scopes_supported).toEqual([
-			"openid",
-			"profile",
-			"email",
-			"offline_access",
+			...new Set([
+				"openid",
+				"profile",
+				"email",
+				"offline_access",
+				...ALLOWED_ATTRIBUTE_KEYS,
+			]),
 		]);
 		// Dynamic client registration is disabled, so no registration endpoint
 		// is advertised.

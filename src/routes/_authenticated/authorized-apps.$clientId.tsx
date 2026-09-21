@@ -8,14 +8,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
-
 import {
 	getAuthorizedApps,
 	revokeAuthorizedApp,
 } from "#/lib/authorized-apps.functions";
+import { resolveRequestedAttributeEntries } from "#/lib/consent-preview";
 import { formatDateTime } from "#/lib/format-date";
 import { messages } from "#/lib/i18n";
-import { getLabelText } from "#/lib/permission-label";
 import { ATTRIBUTE_LABELS } from "#/lib/profile-catalogue";
 
 function isNotFound(err: unknown): boolean {
@@ -114,7 +113,10 @@ function AuthorizedAppDetail({
 	const [revokeError, setRevokeError] = useState(false);
 
 	const displayName = authorizedApp.name?.trim() || authorizedApp.clientId;
-	const sharedEntries = sortedEntries(authorizedApp.releasedAttributes);
+	const requestedEntries = resolveRequestedAttributeEntries(
+		authorizedApp.latestGrantScopes,
+		authorizedApp.releasedAttributes,
+	);
 	const latestGrantLabel = messages.authorizedApps.lastShared.replace(
 		"{when}",
 		formatDateTime(authorizedApp.latestGrantAt),
@@ -180,32 +182,6 @@ function AuthorizedAppDetail({
 
 			<section
 				className="grid gap-2"
-				aria-labelledby="authorized-app-scopes-heading"
-			>
-				<h2
-					id="authorized-app-scopes-heading"
-					className="font-display text-lg font-bold text-sea-ink"
-				>
-					{messages.authorizedApps.scopesHeading}
-				</h2>
-				{authorizedApp.scopes.length > 0 ? (
-					<ul className="flex flex-wrap gap-1.5">
-						{authorizedApp.scopes.map((scope) => (
-							<li
-								key={scope}
-								className="max-w-full break-all rounded-full border border-line bg-bg-surface px-2.5 py-0.5 text-xs font-semibold text-sea-ink"
-							>
-								{getLabelText(scope)}
-							</li>
-						))}
-					</ul>
-				) : (
-					<p className="text-sm text-sea-ink-soft">—</p>
-				)}
-			</section>
-
-			<section
-				className="grid gap-2"
 				aria-labelledby="authorized-app-attributes-heading"
 			>
 				<h2
@@ -214,9 +190,9 @@ function AuthorizedAppDetail({
 				>
 					{messages.authorizedApps.attributesHeading}
 				</h2>
-				{sharedEntries.length > 0 ? (
+				{requestedEntries.length > 0 ? (
 					<dl className="grid gap-2 rounded-2xl border border-line bg-bg-surface p-4 sm:p-5">
-						{sharedEntries.map(([key, value]) => (
+						{requestedEntries.map(({ key, value }) => (
 							<div
 								key={key}
 								className="flex flex-col gap-0.5 border-b border-line/60 pb-2 last:border-b-0 last:pb-0 sm:flex-row sm:justify-between sm:gap-6"
@@ -224,8 +200,14 @@ function AuthorizedAppDetail({
 								<dt className="text-sm text-sea-ink-soft">
 									{ATTRIBUTE_LABELS[key] ?? key}
 								</dt>
-								<dd className="break-all text-sm font-semibold text-sea-ink">
-									{value}
+								<dd
+									className={
+										value === null
+											? "text-sm text-sea-ink-soft"
+											: "break-all text-sm font-semibold text-sea-ink"
+									}
+								>
+									{value ?? messages.consent.notProvided}
 								</dd>
 							</div>
 						))}
@@ -259,15 +241,5 @@ function AuthorizedAppDetail({
 				) : null}
 			</div>
 		</div>
-	);
-}
-
-function sortedEntries(
-	record: Record<string, string>,
-): Array<[string, string]> {
-	const label = (key: string): string =>
-		ATTRIBUTE_LABELS[key] ?? key.toLowerCase();
-	return Object.entries(record).sort(([a], [b]) =>
-		label(a).localeCompare(label(b)),
 	);
 }

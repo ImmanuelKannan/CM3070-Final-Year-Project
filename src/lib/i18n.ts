@@ -190,9 +190,8 @@ export const messages = {
 		searching: "Searching…",
 		noMatchHeading: "No matching apps",
 		noMatchBody: "Try a different app name or identifier.",
-		scopesHeading: "Permissions",
-		attributesHeading: "Latest shared details",
-		noAttributes: "No identity details shared yet.",
+		attributesHeading: "Latest request details",
+		noAttributes: "No identity details requested.",
 		lastShared: "Last shared {when}",
 		revoke: "Revoke access",
 		revoking: "Revoking…",
@@ -205,7 +204,7 @@ export const messages = {
 		notFoundBody:
 			"This app isn't authorized for your account, or its access was already revoked.",
 		backToList: "Back to connected apps",
-		detailAppClientLabel: "App identifier",
+		detailAppClientLabel: "Client ID",
 		loading: "Loading your connected apps…",
 	},
 	developer: {

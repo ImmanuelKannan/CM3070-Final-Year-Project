@@ -15,7 +15,7 @@ import { normalizeScopes } from "#/lib/consent-grants";
 export type AuthorizedApp = {
 	clientId: string;
 	name: string | null;
-	scopes: string[];
+	latestGrantScopes: string[];
 	releasedAttributes: Record<string, string>;
 	latestGrantAt: Date;
 };
@@ -63,7 +63,7 @@ function groupAuthorizedApps(rows: ActiveGrantRow[]): AuthorizedApp[] {
 			authorizedApp = {
 				clientId: row.clientId,
 				name: row.name,
-				scopes: [],
+				latestGrantScopes: [],
 				releasedAttributes: {},
 				latestGrantAt: row.createdAt,
 			};
@@ -71,10 +71,7 @@ function groupAuthorizedApps(rows: ActiveGrantRow[]): AuthorizedApp[] {
 		}
 		authorizedApp.latestGrantAt = row.createdAt;
 		authorizedApp.releasedAttributes = row.releasedAttributes;
-		authorizedApp.scopes.push(...row.scopes);
-	}
-	for (const authorizedApp of authorizedAppGroupingMap.values()) {
-		authorizedApp.scopes = normalizeScopes(authorizedApp.scopes);
+		authorizedApp.latestGrantScopes = normalizeScopes(row.scopes);
 	}
 	return [...authorizedAppGroupingMap.values()].sort(
 		(a, b) => b.latestGrantAt.getTime() - a.latestGrantAt.getTime(),
