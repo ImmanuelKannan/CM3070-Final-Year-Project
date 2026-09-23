@@ -7,11 +7,12 @@ export const APPLICATION_CONTEXTS = [
 	"employment",
 	"healthcare",
 	"government",
+	"others",
 ] as const;
 
 export type ApplicationContext = (typeof APPLICATION_CONTEXTS)[number];
 
-export const PROFILE_TYPES = [...APPLICATION_CONTEXTS, "others"] as const;
+export const PROFILE_TYPES = APPLICATION_CONTEXTS;
 export type ProfileType = (typeof PROFILE_TYPES)[number];
 
 export const PROFILE_TYPE_LABELS: Record<ProfileType, string> = {
@@ -21,7 +22,7 @@ export const PROFILE_TYPE_LABELS: Record<ProfileType, string> = {
 	employment: "Employment",
 	healthcare: "Healthcare",
 	government: "Government",
-	others: "Others",
+	others: "Other",
 };
 
 export const PROFILE_TABS = [
