@@ -40,6 +40,20 @@ export function getAppContext(metadata: any): ApplicationContext | null {
 		: null;
 }
 
+export function getSuggestedProfileId(
+	applicationProfileType: ApplicationContext | null,
+	profiles: readonly { id: string; type: string }[],
+): string | null {
+	if (!applicationProfileType) {
+    return null;
+  }
+
+	return (
+		profiles.find((profile) => profile.type === applicationProfileType)?.id ??
+		null
+	);
+}
+
 export function getRequestedIdentityAttributeKeys(
 	scopes: readonly string[],
 ): string[] {

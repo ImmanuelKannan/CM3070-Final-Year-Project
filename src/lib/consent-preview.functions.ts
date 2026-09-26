@@ -17,6 +17,7 @@ import {
 	getRequestedIdentityAttributeKeys,
 	type PreviewAttribute,
 	resolveConsentPreviewAttributes,
+	getSuggestedProfileId,
 } from "#/lib/consent-preview";
 import { getProfile, listProfiles } from "#/lib/contextual-profiles";
 import { getBaseIdentity } from "#/lib/identity";
@@ -108,9 +109,7 @@ export const getConsentPreview = createServerFn({ method: "POST" })
 			name: p.name,
 		}));
 
-		const suggestedProfileId = suggestedType
-			? (profileOptions.find((p) => p.type === suggestedType)?.id ?? null)
-			: null;
+		const suggestedProfileId = getSuggestedProfileId(suggestedType, profileOptions);
 
 		let selectedProfileId: string | null = null;
 		let selectedProfileName: string | null = null;
