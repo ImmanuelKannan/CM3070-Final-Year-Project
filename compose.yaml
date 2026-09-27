@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: heyme
+      POSTGRES_PASSWORD: heyme
+      POSTGRES_DB: heyme
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  blob:
+    image: ghcr.io/payloadcms/vercel-blob-emulator:latest
+    environment:
+      EMULATOR_BASE_URL: http://localhost:3100
+      BLOB_READ_WRITE_TOKEN: vercel_blob_rw_emulator_local
+    ports:
+      - "127.0.0.1:3100:3000"
+    volumes:
+      - blob-data:/data
+
+volumes:
+  postgres-data:
+  blob-data:
